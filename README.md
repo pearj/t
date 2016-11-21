@@ -4,5 +4,5 @@
 
 ## Tiny smoke python selenium test
 
-    pip install -U selenium #first time
+    pip install --user --upgrade selenium
     curl -sSL https://raw.github.com/dosel/t/i/s | python

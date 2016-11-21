@@ -1,76 +1,160 @@
 #!/usr/bin/env bash
 
-# With love by team-tip
+# One-liner Zalenium & Docker-selenium (dosel) installer
+#-- With love by team-tip
 
 # set -e: exit asap if a command exits with a non-zero status
 set -e
 
-echo "Checking dependencies..."
-
-if ! which grep; then
-    echo "Please install grep, e.g. brew install grep"
-    exit 1
+#--------------------------------------------------------
+# Grab params
+#--------------------------------------------------------
+if [ "$1" == "upd" ] || [ "$2" == "upd" ]; then
+	upgrade_if_needed="true"
+else
+	upgrade_if_needed="false"
 fi
 
-if ! which wc; then
-    echo "Please install wc, e.g. brew install wc"
-    exit 1
+if [ "$1" == "no-sudo" ] || [ "$2" == "no-sudo" ]; then
+	we_have_sudo="false"
+else
+	we_have_sudo="true"
 fi
 
-if ! which wget; then
-    echo "Please install wget, e.g. brew install wget"
-    exit 1
+# Overwrite defaults in certain peculiar environments
+if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
+	upgrade_if_needed="true"
+	we_have_sudo="false"
 fi
 
-if ! which java; then
-    echo "Please install java"
-    exit 2
+if [ "${upgrade_if_needed}" == "true" ]; then
+	checking_and_or_updating="Checking and updating"
+else
+	checking_and_or_updating="Checking"
 fi
+#--------------------------------------------------------
 
-if ! which docker; then
-    echo "Please install docker, e.g. brew install docker"
-    exit 2
-fi
+function Main() {
+	CheckDependencies
+	PullDependencies
+}
 
-# TODO: Check supported docker range of versions, e.g. >= 1.12.1
-#
+function InstallDockerCompose() {
+	DOCKER_COMPOSE_VERSION="1.9.0"
+	PLATFORM=`uname -s`-`uname -m`
+	url="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-${PLATFORM}"
+	curl -ssL "${url}" >docker-compose
+	chmod +x docker-compose
 
-# Note it doesn't matter if the container named `grid` exists
-# `docker ps` will only fail if docker is not running
-if ! docker ps -q --filter=name=grid; then
-    echo "Docker is installed but doesn't seem to be running properly."
-    echo "Make sure docker commands like docker ps work."
-    exit 3
-fi
+	if [ "${we_have_sudo}" == "true" ]; then
+		sudo rm -f /usr/bin/docker-compose
+		sudo rm -f /usr/local/bin/docker-compose
+		sudo mv docker-compose /usr/local/bin
+		docker-compose --version
+	else
+		./docker-compose --version
+	fi
+}
 
-# Retry download up to 3 times as network issues tend to break this
-docker pull elgalu/selenium:latest || \
-docker pull elgalu/selenium:latest || \
-docker pull elgalu/selenium:latest
+# VersionGt tell if the 1st argument version is greater than the 2nd
+#   VersionGt "1.12.3" "1.11"   #=> exit 0
+#   VersionGt "1.12.3" "1.12"   #=> exit 0
+#   VersionGt "1.12.3" "1.13"   #=> exit 1
+#   VersionGt "1.12.3" "1.12.3" #=> exit 1
+function VersionGt() {
+	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
 
-# if [ ! -f "selenium-server-standalone-2.53.1.jar" ]; then
-# 	echo "Downloading Selenium..."
-# 	wget -nv "https://selenium-release.storage.googleapis.com/2.53/selenium-server-standalone-2.53.1.jar"
-# fi
+function CheckDependencies() {
+	# TODO: Only check upon new Zalenium versions
+	echo -n "${checking_and_or_updating} dependencies... "
 
-if [ ! -f "zalenium-0.3.0.jar" ]; then
-	echo "Downloading Zalenium..."
-	wget -nv "https://github.com/zalando-incubator/zalenium/releases/download/v0.3.0/zalenium-release-v0.3.0.tar.gz"
-	echo "Uncompressing Zalenium..."
-	tar xzf "zalenium-release-v0.3.0.tar.gz"
-	rm "zalenium-release-v0.3.0.tar.gz"
-	mv "zalenium-release-v0.3.0"/* .
-	rmdir "zalenium-release-v0.3.0"
-	ls "zalenium.sh" "zalenium-0.3.0.jar" "selenium-server-standalone-2.53.1.jar"
-fi
+	if ! which test >/dev/null; then
+		echo "Please install test, e.g. brew install test"
+		exit 1
+	fi
 
-# Small issue: old docker versions doesn't support docker images {name} -q
-# TODO: deploy new version of Zalenium
-#
-rm zalenium.sh
-wget -nv "https://raw.githubusercontent.com/zalando-incubator/zalenium/dockerized/scripts/zalenium.sh"
-chmod +x zalenium.sh
-sed -i -e 's/${project.build.finalName}/zalenium-0.3.0/g' zalenium.sh
+	if ! which printf >/dev/null; then
+		echo "Please install printf, e.g. brew install printf"
+		exit 2
+	fi
 
-echo -e "\nZalenium is ready. Start with:"
-echo -e "\t./zalenium.sh start"
+	if ! sort --version >/dev/null; then
+		echo "Please install sort, e.g. brew install sort"
+		exit 3
+	fi
+
+	if ! grep --version >/dev/null; then
+		echo "Please install grep, e.g. brew install grep"
+		exit 4
+	fi
+
+	if ! wc --version >/dev/null; then
+		echo "Please install wc, e.g. brew install wc"
+		exit 5
+	fi
+
+	if ! head --version >/dev/null; then
+		echo "Please install head, e.g. brew install head"
+		exit 6
+	fi
+
+	if ! wget --version >/dev/null; then
+		echo "Please install wget, e.g. brew install wget"
+		exit 7
+	fi
+
+	if ! docker --version >/dev/null; then
+		echo "Please install docker, e.g. brew install docker"
+		exit 8
+	fi
+
+	# Grab docker version, e.g. "1.12.3"
+	DOCKER_VERSION=$(docker --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+	# Check supported docker range of versions, e.g. > 1.11.0
+	if ! VersionGt "${DOCKER_VERSION}" "1.11.0"; then
+		echo "Current docker version '${DOCKER_VERSION}' is not supported by Zalenium"
+		echo "Docker version >= 1.11.1 is required"
+		exit 9
+	fi
+
+	# Note it doesn't matter if the container named `grid` exists
+	# `docker ps` will only fail if docker is not running
+	if ! docker ps -q --filter=name=grid >/dev/null; then
+		echo "Docker is installed but doesn't seem to be running properly."
+		echo "Make sure docker commands like 'docker ps' work."
+		exit 10
+	fi
+
+	# Grab docker-compose version, e.g. "1.9.0"
+	DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+	# Check supported docker-compose range of versions, e.g. > 1.8.0
+	if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.8.0"; then
+		echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
+		if [ "${upgrade_if_needed}" == "true" ]; then
+			echo "Will upgarde docker-compose because you passed the 'upd' argument"
+			InstallDockerCompose
+		else
+			echo "Docker version >= 1.8.1 is required"
+			exit 11
+		fi
+	fi
+
+	echo "Done ${checking_and_or_updating} dependencies."
+}
+
+function PullDependencies() {
+	# Retry pulls up to 3 times as networks are known to be unreliable
+
+	# https://github.com/zalando-incubator/zalenium
+	docker pull dosel/zalenium:latest || \
+	docker pull dosel/zalenium:latest || \
+	docker pull dosel/zalenium:latest
+
+	# https://github.com/elgalu/docker-selenium
+	docker pull elgalu/selenium:latest || \
+	docker pull elgalu/selenium:latest || \
+	docker pull elgalu/selenium:latest
+}
+
+Main
