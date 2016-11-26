@@ -133,7 +133,7 @@ function CheckDependencies() {
 		echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
 		if [ "${upgrade_if_needed}" == "true" ]; then
 			echo "Will upgarde docker-compose because you passed the 'upd' argument"
-			InstallDockerCompose
+			#InstallDockerCompose
 		else
 			echo "Docker version >= 1.8.1 is required"
 			exit 11
