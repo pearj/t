@@ -273,10 +273,16 @@ while [ "$1" != "" ]; do
         u)
             upgrade_if_needed="true"
             ;;
+        no-sudo)
+            we_have_sudo="false"
+            ;;
         --no-sudo)
             we_have_sudo="false"
             ;;
         --start)
+            start_it="true"
+            ;;
+        start)
             start_it="true"
             ;;
         -s)
