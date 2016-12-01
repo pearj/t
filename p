@@ -152,7 +152,7 @@ function CheckDependencies() {
 		exit 13
 	fi
 
-	if ! docker-compose --version >/dev/null; then
+	if ! docker-compose --version >/dev/null 2>&1; then
 		echo "--INFO: docker-compose is not installed"
 	else
 		# Grab docker-compose version, e.g. "1.9.0"
