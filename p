@@ -6,39 +6,6 @@
 # set -e: exit asap if a command exits with a non-zero status
 set -e
 
-#--------------------------------------------------------
-# Grab params
-#--------------------------------------------------------
-if [ "$1" == "upd" ] || [ "$2" == "upd" ]; then
-	upgrade_if_needed="true"
-else
-	upgrade_if_needed="false"
-fi
-
-if [ "$1" == "no-sudo" ] || [ "$2" == "no-sudo" ]; then
-	we_have_sudo="false"
-else
-	we_have_sudo="true"
-fi
-
-# Overwrite defaults in certain peculiar environments
-if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
-	upgrade_if_needed="true"
-	we_have_sudo="false"
-fi
-
-if [ "${upgrade_if_needed}" == "true" ]; then
-	checking_and_or_updating="Checking and updating"
-else
-	checking_and_or_updating="Checking"
-fi
-#--------------------------------------------------------
-
-function Main() {
-	CheckDependencies
-	PullDependencies
-}
-
 # In OSX install gtimeout through `brew install coreutils`
 function mtimeout() {
     if [ "$(uname -s)" = 'Darwin' ]; then
@@ -46,6 +13,62 @@ function mtimeout() {
     else
         timeout "$@"
     fi
+}
+
+# Actively waits for Zalenium to fully starts
+# you can copy paste this in your Jenkins scripts
+WaitZaleniumStarted()
+{
+    DONE_MSG="Zalenium is now ready!"
+    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitZaleniumStarted
+
+StartZalenium()
+{
+    CONTAINERS=$(docker ps -a -f name=zalenium -q | wc -l)
+    if [ ${CONTAINERS} -gt 0 ]; then
+        echo "Removing exited docker-selenium containers..."
+        docker rm -f $(docker ps -a -f name=zalenium -q)
+    fi
+
+    echo "Starting Zalenium in docker..."
+
+    #TODO: if linux:
+    #TODO: if xxxx exists in the hosts the share it
+    # mkdir -p ./videos
+    # -v ./videos:/home/seluser/videos \
+    # --timeZone
+    docker run -d -t --name zalenium \
+      -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /usr/bin/docker:/usr/bin/docker \
+      -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro \
+      -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro \
+      -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro \
+      -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro \
+      -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro \
+      -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro \
+      -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro \
+      -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro \
+      dosel/zalenium \
+      start --chromeContainers 0 \
+            --firefoxContainers 0 \
+            --maxDockerSeleniumContainers 30 \
+            --screenWidth 1920 --screenHeight 1080 \
+            --timeZone "$(cat /etc/timezone)" \
+            --videoRecordingEnabled false \
+            --sauceLabsEnabled false
+
+    if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
+        echo "Zalenium failed to start after 2 minutes, failing..."
+        exit 4
+    fi
+
+    echo "Zalenium in docker started!"
 }
 
 function InstallDockerCompose() {
@@ -72,6 +95,30 @@ function InstallDockerCompose() {
 #   VersionGt "1.12.3" "1.12.3" #=> exit 1
 function VersionGt() {
 	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
+
+function usage() {
+    echo "Usage:"
+    echo ""
+    echo "$0"
+    echo -e "\t -h --help"
+    echo -e "\t -s -> Starts Zalenium after downloading."
+    echo -e "\t -u ."
+    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
+    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
+    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
+    echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
+    echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
+    echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
+    echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
+    echo ""
+    echo -e "\t stop"
+    echo ""
+    echo -e "\t Examples:"
+    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
+    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
+    echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
 
 function CheckDependencies() {
@@ -187,4 +234,75 @@ function PullDependencies() {
 	docker pull elgalu/selenium:latest
 }
 
-Main
+#----------
+# Defaults
+#----------
+upgrade_if_needed="false"
+we_have_sudo="true"
+start_it="false"
+
+# Overwrite defaults in certain peculiar environments
+if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
+	upgrade_if_needed="true"
+	we_have_sudo="false"
+fi
+
+#---------------------
+# Parse CLI arguments
+#---------------------
+while [ "$1" != "" ]; do
+    # PARAM="$(echo $1)"
+    PARAM="$1"
+    case ${PARAM} in
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --upgrade_if_needed)
+            upgrade_if_needed="true"
+            ;;
+        --upd)
+            upgrade_if_needed="true"
+            ;;
+        upd)
+            upgrade_if_needed="true"
+            ;;
+        -u)
+            upgrade_if_needed="true"
+            ;;
+        u)
+            upgrade_if_needed="true"
+            ;;
+        --no-sudo)
+            we_have_sudo="false"
+            ;;
+        --start)
+            start_it="true"
+            ;;
+        -s)
+            start_it="true"
+            ;;
+        s)
+            start_it="true"
+            ;;
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 10
+            ;;
+    esac
+    shift 1
+done
+
+if [ "${upgrade_if_needed}" == "true" ]; then
+	checking_and_or_updating="Checking and updating"
+else
+	checking_and_or_updating="Checking"
+fi
+
+CheckDependencies
+PullDependencies
+
+if [ "${start_it}" == "true" ]; then
+	StartZalenium
+fi
