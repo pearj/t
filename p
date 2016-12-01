@@ -39,6 +39,15 @@ function Main() {
 	PullDependencies
 }
 
+# In OSX install gtimeout through `brew install coreutils`
+function mtimeout() {
+    if [ "$(uname -s)" = 'Darwin' ]; then
+        gtimeout "$@"
+    else
+        timeout "$@"
+    fi
+}
+
 function InstallDockerCompose() {
 	DOCKER_COMPOSE_VERSION="1.9.0"
 	PLATFORM=`uname -s`-`uname -m`
@@ -99,14 +108,31 @@ function CheckDependencies() {
 		exit 6
 	fi
 
+	if ! perl --version >/dev/null; then
+		echo "Please install perl, e.g. brew install perl"
+		exit 7
+	fi
+
 	if ! wget --version >/dev/null; then
 		echo "Please install wget, e.g. brew install wget"
-		exit 7
+		exit 8
+	fi
+
+	if ! timeout --version >/dev/null; then
+		if [ "$(uname -s)" = 'Darwin' ]; then
+			if ! gtimeout --version >/dev/null; then
+				echo "Please install gtimeout, e.g. brew install coreutils"
+				exit 9
+			fi
+		else
+			echo "Please install GNU timeout"
+			exit 10
+		fi
 	fi
 
 	if ! docker --version >/dev/null; then
 		echo "Please install docker, e.g. brew install docker"
-		exit 8
+		exit 11
 	fi
 
 	# Grab docker version, e.g. "1.12.3"
@@ -115,7 +141,7 @@ function CheckDependencies() {
 	if ! VersionGt "${DOCKER_VERSION}" "1.11.0"; then
 		echo "Current docker version '${DOCKER_VERSION}' is not supported by Zalenium"
 		echo "Docker version >= 1.11.1 is required"
-		exit 9
+		exit 12
 	fi
 
 	# Note it doesn't matter if the container named `grid` exists
@@ -123,20 +149,24 @@ function CheckDependencies() {
 	if ! docker ps -q --filter=name=grid >/dev/null; then
 		echo "Docker is installed but doesn't seem to be running properly."
 		echo "Make sure docker commands like 'docker ps' work."
-		exit 10
+		exit 13
 	fi
 
-	# Grab docker-compose version, e.g. "1.9.0"
-	DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
-	# Check supported docker-compose range of versions, e.g. > 1.8.0
-	if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.8.0"; then
-		echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
-		if [ "${upgrade_if_needed}" == "true" ]; then
-			echo "Will upgarde docker-compose because you passed the 'upd' argument"
-			InstallDockerCompose
-		else
-			echo "Docker version >= 1.8.1 is required"
-			exit 11
+	if ! docker-compose --version >/dev/null; then
+		echo "--INFO: docker-compose is not installed"
+	else
+		# Grab docker-compose version, e.g. "1.9.0"
+		DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+		# Check supported docker-compose range of versions, e.g. > 1.8.0
+		if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.8.0"; then
+			echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
+			if [ "${upgrade_if_needed}" == "true" ]; then
+				echo "Will upgarde docker-compose because you passed the 'upd' argument"
+				InstallDockerCompose
+			else
+				echo "Docker version >= 1.8.1 is required"
+				exit 13
+			fi
 		fi
 	fi
 
