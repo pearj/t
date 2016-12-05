@@ -65,6 +65,7 @@ StartZalenium()
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
+        docker logs zalenium
         exit 4
     fi
 
@@ -307,7 +308,7 @@ else
 fi
 
 CheckDependencies
-# PullDependencies
+PullDependencies
 
 if [ "${start_it}" == "true" ]; then
 	StartZalenium
