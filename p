@@ -57,7 +57,7 @@ StartZalenium()
       dosel/zalenium \
       start --chromeContainers 0 \
             --firefoxContainers 0 \
-            --maxDockerSeleniumContainers 30 \
+            --maxDockerSeleniumContainers 8 \
             --screenWidth 1920 --screenHeight 1080 \
             --timeZone "$(cat /etc/timezone)" \
             --videoRecordingEnabled false \
@@ -307,7 +307,7 @@ else
 fi
 
 CheckDependencies
-PullDependencies
+# PullDependencies
 
 if [ "${start_it}" == "true" ]; then
 	StartZalenium
