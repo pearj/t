@@ -205,14 +205,14 @@ function CheckDependencies() {
 	else
 		# Grab docker-compose version, e.g. "1.9.0"
 		DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
-		# Check supported docker-compose range of versions, e.g. > 1.8.0
-		if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.8.0"; then
+		# Check supported docker-compose range of versions, e.g. > 1.7.0
+		if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.7.0"; then
 			echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
 			if [ "${upgrade_if_needed}" == "true" ]; then
 				echo "Will upgarde docker-compose because you passed the 'upd' argument"
 				#InstallDockerCompose
 			else
-				echo "Docker version >= 1.8.1 is required"
+				echo "Docker-compose version >= 1.7.1 is required"
 				exit 14
 			fi
 		fi
