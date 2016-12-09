@@ -27,6 +27,15 @@ WaitZaleniumStarted()
 }
 export -f WaitZaleniumStarted
 
+EnsureCleanEnv()
+{
+    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
+    if [ ${CONTAINERS} -gt 0 ]; then
+        echo "Removing exited docker-selenium containers..."
+        docker rm -f $(docker ps -a -f name=zalenium_ -q)
+    fi
+}
+
 StartZalenium()
 {
     CONTAINERS=$(docker ps -a -f name=zalenium -q | wc -l)
@@ -247,6 +256,7 @@ function PullDependencies() {
 upgrade_if_needed="false"
 we_have_sudo="true"
 start_it="false"
+stop_it="false"
 
 # Overwrite defaults in certain peculiar environments
 if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
@@ -298,6 +308,12 @@ while [ "$1" != "" ]; do
         s)
             start_it="true"
             ;;
+        --stop)
+            stop_it="true"
+            ;;
+        stop)
+            stop_it="true"
+            ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
             usage
@@ -306,6 +322,15 @@ while [ "$1" != "" ]; do
     esac
     shift 1
 done
+
+if [ "${stop_it}" == "true" ]; then
+	echo "Stopping..."
+	docker stop zalenium >/dev/null 2>&1 || true
+	docker rm zalenium >/dev/null 2>&1 || true
+	EnsureCleanEnv
+	echo "Zalenium stopped!"
+	exit 0
+fi
 
 if [ "${upgrade_if_needed}" == "true" ]; then
 	checking_and_or_updating="Checking and updating"
