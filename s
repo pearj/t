@@ -15,9 +15,10 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 # http://selenium-python.readthedocs.org/en/latest/api.html
 caps = DesiredCapabilities.CHROME
-sel_host = os.environ.get('SEL_HOST','localhost')
-sel_port = os.environ.get('SEL_PORT','4444')
-myselenium = "http://%s:%s/wd/hub" % (sel_host, sel_port)
+sel_host = os.environ.get('SEL_HOST', 'localhost')
+sel_port = os.environ.get('SEL_PORT', '4444')
+sel_url = "http://%s:%s/wd/hub" % (sel_host, sel_port)
+myselenium = os.environ.get('SELENIUM_URL', sel_url)
 print ("Will connect to selenium at %s" % myselenium)
 
 # http://selenium-python.readthedocs.org/en/latest/getting-started.html#using-selenium-with-remote-webdriver

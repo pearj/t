@@ -70,6 +70,11 @@ StartZalenium()
         exit 4
     fi
 
+    # Below export is useless if this is run in a separate shell
+    export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+    export SEL_PORT="4444"
+    export SELENIUM_URL="http://${SEL_HOST}:${SEL_PORT}/wd/hub"
+
     echo "Zalenium in docker started!"
 }
 
