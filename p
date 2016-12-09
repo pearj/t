@@ -44,6 +44,7 @@ StartZalenium()
     # --timeZone
     docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 \
+      -e BUILD_URL -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /usr/bin/docker:/usr/bin/docker \
       -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro \
