@@ -47,7 +47,7 @@ StartZalenium()
     echo "Starting Zalenium in docker..."
 
     #TODO: if linux:
-    #TODO: if xxxx exists in the hosts the share it
+    #TODO: if xxxx exists in the hosts then share it
     # mkdir -p ./videos
     # -v ./videos:/home/seluser/videos \
     # --timeZone
@@ -64,7 +64,7 @@ StartZalenium()
       -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro \
       -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro \
       -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro \
-      dosel/zalenium \
+      dosel/zalenium:${zalenium_tag} \
       start --chromeContainers 0 \
             --firefoxContainers 0 \
             --maxDockerSeleniumContainers 8 \
@@ -239,10 +239,10 @@ function CheckDependencies() {
 function PullDependencies() {
 	# Retry pulls up to 3 times as networks are known to be unreliable
 
-	# https://github.com/zalando-incubator/zalenium
-	docker pull dosel/zalenium:latest || \
-	docker pull dosel/zalenium:latest || \
-	docker pull dosel/zalenium:latest
+	# https://github.com/zalando/zalenium
+	docker pull dosel/zalenium:${zalenium_tag} || \
+	docker pull dosel/zalenium:${zalenium_tag} || \
+	docker pull dosel/zalenium:${zalenium_tag}
 
 	# https://github.com/elgalu/docker-selenium
 	docker pull elgalu/selenium:latest || \
@@ -257,6 +257,7 @@ upgrade_if_needed="false"
 we_have_sudo="true"
 start_it="false"
 stop_it="false"
+zalenium_tag="latest"
 
 # Overwrite defaults in certain peculiar environments
 if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
@@ -313,6 +314,14 @@ while [ "$1" != "" ]; do
             ;;
         stop)
             stop_it="true"
+            ;;
+        3*)
+            echo "Will use Zalenium tag: $1"
+            zalenium_tag="$1"
+            ;;
+        2*)
+            echo "Will use Zalenium tag: $1"
+            zalenium_tag="$1"
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
