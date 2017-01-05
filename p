@@ -44,34 +44,79 @@ StartZalenium()
         docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
 
-    echo "Starting Zalenium in docker..."
+    # Set Zalenium config
+    #  e.g. DOCKER_VER_MAJ_MIN=1.11
+    #  e.g. DOCKER_VER_MAJ_MIN=1.12
+    #  e.g. DOCKER_VER_MAJ_MIN=1.13
+    DOCKER_VER_MAJ_MIN=$(docker --version | grep -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
+    Z_DOCKER_OPTS=""
+    Z_START_OPTS=""
 
-    #TODO: if linux:
-    #TODO: if xxxx exists in the hosts then share it
-    # mkdir -p ./videos
-    # -v ./videos:/home/seluser/videos \
-    # --timeZone
+    if [ -f /usr/bin/docker ]; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/bin/docker:/usr/bin/docker"
+    else
+        # This should only be necessary in docker native for OSX
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -e DOCKER=${DOCKER_VER_MAJ_MIN}"
+    fi
+
+    if [ -f /etc/timezone ]; then
+        Z_START_OPTS="${Z_START_OPTS} --timeZone \"$(cat /etc/timezone)\""
+        # TODO: else: Figure out how to get timezone in OSX
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libsystemd-journal.so.0 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro"
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libcgmanager.so.0 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro"
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libnih.so.1 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro"
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libnih-dbus.so.1 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro"
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libdbus-1.so.3 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro"
+    fi
+
+    if ! ls /lib/x86_64-linux-gnu/libgcrypt.so.11 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro"
+    fi
+
+    if ! ls /usr/lib/x86_64-linux-gnu/libapparmor.so.1 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro"
+    fi
+
+    if ! ls /usr/lib/x86_64-linux-gnu/libltdl.so.7 >/dev/null; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro"
+    fi
+
+    echo "Starting Zalenium in docker..."
     docker run -d -t --name zalenium \
-      -p 4444:4444 -p 5555:5555 \
-      -e BUILD_URL -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+      -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
+      -e BUILD_URL \
+      -e SAUCE_USERNAME \
+      -e SAUCE_ACCESS_KEY \
+      -e TESTINGBOT_SECRET \
+      -e TESTINGBOT_KEY \
+      -e BROWSER_STACK_USER \
+      -e BROWSER_STACK_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      -v /usr/bin/docker:/usr/bin/docker \
-      -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro \
-      -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro \
-      -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro \
-      -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro \
-      -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro \
-      -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro \
-      -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro \
-      -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro \
       dosel/zalenium:${zalenium_tag} \
-      start --chromeContainers 0 \
-            --firefoxContainers 0 \
+      start --chromeContainers 1 \
+            --firefoxContainers 1 \
             --maxDockerSeleniumContainers 8 \
-            --screenWidth 1920 --screenHeight 1080 \
-            --timeZone "$(cat /etc/timezone)" \
+            --screenWidth 1920 --screenHeight 1080 ${Z_START_OPTS} \
             --videoRecordingEnabled false \
-            --sauceLabsEnabled false
+            --sauceLabsEnabled false \
+            --browserStackEnabled false \
+            --testingBotEnabled false \
+            --startTunnel false
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
@@ -88,20 +133,20 @@ StartZalenium()
 }
 
 function InstallDockerCompose() {
-	DOCKER_COMPOSE_VERSION="1.9.0"
-	PLATFORM=`uname -s`-`uname -m`
-	url="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-${PLATFORM}"
-	curl -ssL "${url}" >docker-compose
-	chmod +x docker-compose
+    DOCKER_COMPOSE_VERSION="1.9.0"
+    PLATFORM=`uname -s`-`uname -m`
+    url="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-${PLATFORM}"
+    curl -ssL "${url}" >docker-compose
+    chmod +x docker-compose
 
-	if [ "${we_have_sudo}" == "true" ]; then
-		sudo rm -f /usr/bin/docker-compose
-		sudo rm -f /usr/local/bin/docker-compose
-		sudo mv docker-compose /usr/local/bin
-		docker-compose --version
-	else
-		./docker-compose --version
-	fi
+    if [ "${we_have_sudo}" == "true" ]; then
+        sudo rm -f /usr/bin/docker-compose
+        sudo rm -f /usr/local/bin/docker-compose
+        sudo mv docker-compose /usr/local/bin
+        docker-compose --version
+    else
+        ./docker-compose --version
+    fi
 }
 
 # VersionGt tell if the 1st argument version is greater than the 2nd
@@ -110,7 +155,7 @@ function InstallDockerCompose() {
 #   VersionGt "1.12.3" "1.13"   #=> exit 1
 #   VersionGt "1.12.3" "1.12.3" #=> exit 1
 function VersionGt() {
-	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+    test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 function usage() {
@@ -138,116 +183,121 @@ function usage() {
 }
 
 function CheckDependencies() {
-	# TODO: Only check upon new Zalenium versions
-	echo -n "${checking_and_or_updating} dependencies... "
+    # TODO: Only check upon new Zalenium versions
+    echo -n "${checking_and_or_updating} dependencies... "
 
-	if ! which test >/dev/null; then
-		echo "Please install test, e.g. brew install test"
-		exit 1
-	fi
+    if ! which test >/dev/null; then
+        echo "Please install test, e.g. brew install test"
+        exit 1
+    fi
 
-	if ! which printf >/dev/null; then
-		echo "Please install printf, e.g. brew install printf"
-		exit 2
-	fi
+    if ! which printf >/dev/null; then
+        echo "Please install printf, e.g. brew install printf"
+        exit 2
+    fi
 
-	if ! sort --version >/dev/null; then
-		echo "Please install sort, e.g. brew install sort"
-		exit 3
-	fi
+    if ! sort --version >/dev/null; then
+        echo "Please install sort, e.g. brew install sort"
+        exit 3
+    fi
 
-	if ! grep --version >/dev/null; then
-		echo "Please install grep, e.g. brew install grep"
-		exit 4
-	fi
+    if ! grep --version >/dev/null; then
+        echo "Please install grep, e.g. brew install grep"
+        exit 4
+    fi
 
-	if ! wc --version >/dev/null; then
-		echo "Please install wc, e.g. brew install wc"
-		exit 5
-	fi
+    if ! wc --version >/dev/null; then
+        echo "Please install wc, e.g. brew install wc"
+        exit 5
+    fi
 
-	if ! head --version >/dev/null; then
-		echo "Please install head, e.g. brew install head"
-		exit 6
-	fi
+    if ! head --version >/dev/null; then
+        echo "Please install head, e.g. brew install head"
+        exit 6
+    fi
 
-	if ! perl --version >/dev/null; then
-		echo "Please install perl, e.g. brew install perl"
-		exit 7
-	fi
+    if ! perl --version >/dev/null; then
+        echo "Please install perl, e.g. brew install perl"
+        exit 7
+    fi
 
-	if ! wget --version >/dev/null; then
-		echo "Please install wget, e.g. brew install wget"
-		exit 8
-	fi
+    if ! wget --version >/dev/null; then
+        echo "Please install wget, e.g. brew install wget"
+        exit 8
+    fi
 
-	if ! timeout --version >/dev/null; then
-		if [ "$(uname -s)" = 'Darwin' ]; then
-			if ! gtimeout --version >/dev/null; then
-				echo "Please install gtimeout, e.g. brew install coreutils"
-				exit 9
-			fi
-		else
-			echo "Please install GNU timeout"
-			exit 10
-		fi
-	fi
+    if ! timeout --version >/dev/null; then
+        if [ "$(uname -s)" = 'Darwin' ]; then
+            if ! gtimeout --version >/dev/null; then
+                echo "Please install gtimeout, e.g. brew install coreutils"
+                exit 9
+            fi
+        else
+            echo "Please install GNU timeout"
+            exit 10
+        fi
+    fi
 
-	if ! docker --version >/dev/null; then
-		echo "Please install docker, e.g. brew install docker"
-		exit 11
-	fi
+    if ! docker --version >/dev/null; then
+        echo "Please install docker, e.g. brew install docker"
+        exit 11
+    fi
 
-	# Grab docker version, e.g. "1.12.3"
-	DOCKER_VERSION=$(docker --version | grep -Po '(?<=version )([a-z0-9\.]+)')
-	# Check supported docker range of versions, e.g. > 1.11.0
-	if ! VersionGt "${DOCKER_VERSION}" "1.11.0"; then
-		echo "Current docker version '${DOCKER_VERSION}' is not supported by Zalenium"
-		echo "Docker version >= 1.11.1 is required"
-		exit 12
-	fi
+    # Grab docker version, e.g. "1.12.3"
+    DOCKER_VERSION=$(docker --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+    # Check supported docker range of versions, e.g. > 1.11.0
+    if ! VersionGt "${DOCKER_VERSION}" "1.11.0"; then
+        echo "Current docker version '${DOCKER_VERSION}' is not supported by Zalenium"
+        echo "Docker version >= 1.11.1 is required"
+        exit 12
+    fi
 
-	# Note it doesn't matter if the container named `grid` exists
-	# `docker ps` will only fail if docker is not running
-	if ! docker ps -q --filter=name=grid >/dev/null; then
-		echo "Docker is installed but doesn't seem to be running properly."
-		echo "Make sure docker commands like 'docker ps' work."
-		exit 13
-	fi
+    # Note it doesn't matter if the container named `grid` exists
+    # `docker ps` will only fail if docker is not running
+    if ! docker ps -q --filter=name=grid >/dev/null; then
+        echo "Docker is installed but doesn't seem to be running properly."
+        echo "Make sure docker commands like 'docker ps' work."
+        exit 13
+    fi
 
-	if ! docker-compose --version >/dev/null 2>&1; then
-		echo "--INFO: docker-compose is not installed"
-	else
-		# Grab docker-compose version, e.g. "1.9.0"
-		DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
-		# Check supported docker-compose range of versions, e.g. > 1.7.0
-		if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.7.0"; then
-			echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
-			if [ "${upgrade_if_needed}" == "true" ]; then
-				echo "Will upgarde docker-compose because you passed the 'upd' argument"
-				#InstallDockerCompose
-			else
-				echo "Docker-compose version >= 1.7.1 is required"
-				exit 14
-			fi
-		fi
-	fi
+    if ! docker-compose --version >/dev/null 2>&1; then
+        echo "--INFO: docker-compose is not installed"
+    else
+        # Grab docker-compose version, e.g. "1.9.0"
+        DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+        # Check supported docker-compose range of versions, e.g. > 1.7.0
+        if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.7.0"; then
+            echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
+            if [ "${upgrade_if_needed}" == "true" ]; then
+                echo "Will upgarde docker-compose because you passed the 'upd' argument"
+                #InstallDockerCompose
+            else
+                echo "Docker-compose version >= 1.7.1 is required"
+                exit 14
+            fi
+        fi
+    fi
 
-	echo "Done ${checking_and_or_updating} dependencies."
+    if ! ls /var/run/docker.sock >/dev/null; then
+        echo "ERROR: Zalenium needs /var/run/docker.sock but couldn't find it!"
+        exit 15
+    fi
+
+    echo "Done ${checking_and_or_updating} dependencies."
 }
 
 function PullDependencies() {
-	# Retry pulls up to 3 times as networks are known to be unreliable
+    # Retry pulls up to 3 times as networks are known to be unreliable
 
-	# https://github.com/zalando/zalenium
-	docker pull dosel/zalenium:${zalenium_tag} || \
-	docker pull dosel/zalenium:${zalenium_tag} || \
-	docker pull dosel/zalenium:${zalenium_tag}
+    # https://github.com/zalando/zalenium
+    docker pull dosel/zalenium:${zalenium_tag} || \
+    docker pull dosel/zalenium:${zalenium_tag} || \
+    docker pull dosel/zalenium:${zalenium_tag}
 
-	# https://github.com/elgalu/docker-selenium
-	docker pull elgalu/selenium:latest || \
-	docker pull elgalu/selenium:latest || \
-	docker pull elgalu/selenium:latest
+    # https://github.com/elgalu/docker-selenium
+    docker pull elgalu/selenium:latest || \
+    docker pull elgalu/selenium:latest || \
+    docker pull elgalu/selenium:latest
 }
 
 #----------
@@ -261,8 +311,8 @@ zalenium_tag="latest"
 
 # Overwrite defaults in certain peculiar environments
 if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
-	upgrade_if_needed="true"
-	we_have_sudo="false"
+    upgrade_if_needed="true"
+    we_have_sudo="false"
 fi
 
 #---------------------
@@ -315,13 +365,23 @@ while [ "$1" != "" ]; do
         stop)
             stop_it="true"
             ;;
+        3)
+            echo "Checking last pushed Zalenium for Selenium 3 ..."
+            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | grep -E "^3.*" | head -1)
+            echo "Will use Zalenium tag: ${zalenium_tag}"
+            ;;
+        2)
+            echo "Checking last pushed Zalenium for Selenium 2 ..."
+            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | grep -E "^2.*" | head -1)
+            echo "Will use Zalenium tag: ${zalenium_tag}"
+            ;;
         3*)
-            echo "Will use Zalenium tag: $1"
             zalenium_tag="$1"
+            echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
         2*)
-            echo "Will use Zalenium tag: $1"
             zalenium_tag="$1"
+            echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
@@ -333,23 +393,23 @@ while [ "$1" != "" ]; do
 done
 
 if [ "${stop_it}" == "true" ]; then
-	echo "Stopping..."
-	docker stop zalenium >/dev/null 2>&1 || true
-	docker rm zalenium >/dev/null 2>&1 || true
-	EnsureCleanEnv
-	echo "Zalenium stopped!"
-	exit 0
+    echo "Stopping..."
+    docker stop zalenium >/dev/null 2>&1 || true
+    docker rm zalenium >/dev/null 2>&1 || true
+    EnsureCleanEnv
+    echo "Zalenium stopped!"
+    exit 0
 fi
 
 if [ "${upgrade_if_needed}" == "true" ]; then
-	checking_and_or_updating="Checking and updating"
+    checking_and_or_updating="Checking and updating"
 else
-	checking_and_or_updating="Checking"
+    checking_and_or_updating="Checking"
 fi
 
 CheckDependencies
 PullDependencies
 
 if [ "${start_it}" == "true" ]; then
-	StartZalenium
+    StartZalenium
 fi
