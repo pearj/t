@@ -6,7 +6,8 @@
 # set -e: exit asap if a command exits with a non-zero status
 set -e
 
-# In OSX install gtimeout through `brew install coreutils`
+# In OSX install gtimeout through
+#   brew install coreutils
 function mtimeout() {
     if [ "$(uname -s)" = 'Darwin' ]; then
         gtimeout "$@"
@@ -15,12 +16,71 @@ function mtimeout() {
     fi
 }
 
+function please_install_gnu_grep() {
+    echo "GNU grep is not installed, please install with:"
+    echo "  brew tap homebrew/dupes"
+    echo "  brew install grep --with-default-names"
+    echo ""
+    exit 16
+}
+
+# In OSX install GNU grep through
+#   brew tap homebrew/dupes
+#   brew install grep --with-default-names
+#   /usr/local/Cellar/grep/*/bin/grep --version
+function set_mgrep() {
+    if [ "$(uname -s)" != 'Darwin' ]; then
+        M_GREP="grep"
+    else
+        if grep --version >/dev/null; then
+            if grep --version | grep GNU >/dev/null; then
+                # All good here, we can use this default grep.
+                M_GREP="grep"
+            else
+                # Looks like BSD grep is installed so try GNU
+                if /usr/local/Cellar/grep/*/bin/grep --version >/dev/null; then
+                    # Found GNU grep installed
+                    M_GREP="/usr/local/Cellar/grep/*/bin/grep"
+                else
+                    # Will need to install GNU grep
+                    please_install_gnu_grep
+                fi
+            fi
+        else
+            # No grep found in the path, try Cellar
+            if /usr/local/Cellar/grep/*/bin/grep --version >/dev/null; then
+                # Found GNU grep installed
+                M_GREP="/usr/local/Cellar/grep/*/bin/grep"
+            else
+                # Will need to install GNU grep
+                please_install_gnu_grep
+            fi
+        fi
+    fi
+}
+export -f set_mgrep
+set_mgrep
+
+# In OSX install GNU gsort through
+#   brew install coreutils
+function set_msort() {
+    if [ "$(uname -s)" = 'Darwin' ]; then
+        M_SORT="gsort"
+    else
+        M_SORT="sort"
+    fi
+}
+export -f set_msort
+set_msort
+
 # Actively waits for Zalenium to fully starts
 # you can copy paste this in your Jenkins scripts
 WaitZaleniumStarted()
 {
+    set_mgrep
+
     DONE_MSG="Zalenium is now ready!"
-    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+    while ! docker logs zalenium | ${M_GREP} "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -48,7 +108,7 @@ StartZalenium()
     #  e.g. DOCKER_VER_MAJ_MIN=1.11
     #  e.g. DOCKER_VER_MAJ_MIN=1.12
     #  e.g. DOCKER_VER_MAJ_MIN=1.13
-    DOCKER_VER_MAJ_MIN=$(docker --version | grep -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
+    DOCKER_VER_MAJ_MIN=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
     Z_DOCKER_OPTS=""
     Z_START_OPTS=""
 
@@ -64,35 +124,35 @@ StartZalenium()
         # TODO: else: Figure out how to get timezone in OSX
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libsystemd-journal.so.0 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libsystemd-journal.so.0 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro"
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libcgmanager.so.0 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libcgmanager.so.0 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro"
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libnih.so.1 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libnih.so.1 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro"
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libnih-dbus.so.1 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libnih-dbus.so.1 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro"
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libdbus-1.so.3 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libdbus-1.so.3 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro"
     fi
 
-    if ! ls /lib/x86_64-linux-gnu/libgcrypt.so.11 >/dev/null; then
+    if ls /lib/x86_64-linux-gnu/libgcrypt.so.11 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro"
     fi
 
-    if ! ls /usr/lib/x86_64-linux-gnu/libapparmor.so.1 >/dev/null; then
+    if ls /usr/lib/x86_64-linux-gnu/libapparmor.so.1 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro"
     fi
 
-    if ! ls /usr/lib/x86_64-linux-gnu/libltdl.so.7 >/dev/null; then
+    if ls /usr/lib/x86_64-linux-gnu/libltdl.so.7 >/dev/null 2>&1; then
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro"
     fi
 
@@ -155,7 +215,7 @@ function InstallDockerCompose() {
 #   VersionGt "1.12.3" "1.13"   #=> exit 1
 #   VersionGt "1.12.3" "1.12.3" #=> exit 1
 function VersionGt() {
-    test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+    test "$(printf '%s\n' "$@" | ${M_SORT} -V | head -n 1)" != "$1";
 }
 
 function usage() {
@@ -187,32 +247,36 @@ function CheckDependencies() {
     echo -n "${checking_and_or_updating} dependencies... "
 
     if ! which test >/dev/null; then
-        echo "Please install test, e.g. brew install test"
+        echo "Please install test"
+        echo "  brew install coreutils"
         exit 1
     fi
 
     if ! which printf >/dev/null; then
-        echo "Please install printf, e.g. brew install printf"
+        echo "Please install printf"
+        echo "  brew install coreutils"
         exit 2
     fi
 
-    if ! sort --version >/dev/null; then
-        echo "Please install sort, e.g. brew install sort"
+    if ! ${M_SORT} --version >/dev/null; then
+        echo "Please install ${M_SORT} (GNU sort)"
+        echo "  brew install coreutils"
         exit 3
     fi
 
-    if ! grep --version >/dev/null; then
-        echo "Please install grep, e.g. brew install grep"
-        exit 4
+    if ! ${M_GREP} --version >/dev/null; then
+        please_install_gnu_grep
     fi
 
-    if ! wc --version >/dev/null; then
-        echo "Please install wc, e.g. brew install wc"
+    if ! which wc >/dev/null; then
+        echo "Please install wc"
+        echo "  brew install coreutils"
         exit 5
     fi
 
-    if ! head --version >/dev/null; then
-        echo "Please install head, e.g. brew install head"
+    if ! which head >/dev/null; then
+        echo "Please install head"
+        echo "  brew install coreutils"
         exit 6
     fi
 
@@ -226,16 +290,10 @@ function CheckDependencies() {
         exit 8
     fi
 
-    if ! timeout --version >/dev/null; then
-        if [ "$(uname -s)" = 'Darwin' ]; then
-            if ! gtimeout --version >/dev/null; then
-                echo "Please install gtimeout, e.g. brew install coreutils"
-                exit 9
-            fi
-        else
-            echo "Please install GNU timeout"
-            exit 10
-        fi
+    if ! mtimeout --version >/dev/null; then
+        echo "Please install GNU timeout"
+        echo "  brew install coreutils"
+        exit 10
     fi
 
     if ! docker --version >/dev/null; then
@@ -244,7 +302,7 @@ function CheckDependencies() {
     fi
 
     # Grab docker version, e.g. "1.12.3"
-    DOCKER_VERSION=$(docker --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+    DOCKER_VERSION=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9\.]+)')
     # Check supported docker range of versions, e.g. > 1.11.0
     if ! VersionGt "${DOCKER_VERSION}" "1.11.0"; then
         echo "Current docker version '${DOCKER_VERSION}' is not supported by Zalenium"
@@ -264,7 +322,7 @@ function CheckDependencies() {
         echo "--INFO: docker-compose is not installed"
     else
         # Grab docker-compose version, e.g. "1.9.0"
-        DOCKER_COMPOSE_VERSION=$(docker-compose --version | grep -Po '(?<=version )([a-z0-9\.]+)')
+        DOCKER_COMPOSE_VERSION=$(docker-compose --version | ${M_GREP} -Po '(?<=version )([a-z0-9\.]+)')
         # Check supported docker-compose range of versions, e.g. > 1.7.0
         if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.7.0"; then
             echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
@@ -367,12 +425,12 @@ while [ "$1" != "" ]; do
             ;;
         3)
             echo "Checking last pushed Zalenium for Selenium 3 ..."
-            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | grep -E "^3.*" | head -1)
+            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | ${M_GREP} -E "^3.*" | head -1)
             echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
         2)
             echo "Checking last pushed Zalenium for Selenium 2 ..."
-            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | grep -E "^2.*" | head -1)
+            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | ${M_GREP} -E "^2.*" | head -1)
             echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
         3*)
