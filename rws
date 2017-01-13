@@ -62,7 +62,7 @@ function mtimeout() {
 # you can copy paste this in your Jenkins scripts
 WaitVideosTransfered()
 {
-    while ! ls ./videos/*; do
+    while ! ls ./videos/* >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
