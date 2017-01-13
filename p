@@ -112,11 +112,17 @@ StartZalenium()
     Z_DOCKER_OPTS=""
     Z_START_OPTS=""
 
-    if [ -f /usr/bin/docker ]; then
+    if docker-machine active >/dev/null 2>&1; then
+        # With docker-machine the file might not be here
+        # but will be available during docker run
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/bin/docker:/usr/bin/docker"
     else
-        # This should only be necessary in docker native for OSX
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -e DOCKER=${DOCKER_VER_MAJ_MIN}"
+        if [ -f /usr/bin/docker ]; then
+            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/bin/docker:/usr/bin/docker"
+        else
+            # This should only be necessary in docker native for OSX
+            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -e DOCKER=${DOCKER_VER_MAJ_MIN}"
+        fi
     fi
 
     if [ -f /etc/timezone ]; then
@@ -337,8 +343,8 @@ function CheckDependencies() {
     fi
 
     # If we have docker-machine then docker.sock is not in the current host
-    if ! docker-machine active; then
-        if ! ls /var/run/docker.sock >/dev/null 2>&1; then
+    if ! docker-machine active >/dev/null 2>&1; then
+        if ! ls /var/run/docker.sock >/dev/null; then
             echo "ERROR: Zalenium needs /var/run/docker.sock but couldn't find it!"
             exit 15
         fi
