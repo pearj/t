@@ -126,7 +126,7 @@ StartZalenium()
     fi
 
     if [ -f /etc/timezone ]; then
-        Z_START_OPTS="${Z_START_OPTS} --timeZone '$(cat /etc/timezone)'"
+        Z_START_OPTS="${Z_START_OPTS} --timeZone $(cat /etc/timezone)"
         # TODO: else: Figure out how to get timezone in OSX
     fi
 
