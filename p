@@ -336,9 +336,12 @@ function CheckDependencies() {
         fi
     fi
 
-    if ! ls /var/run/docker.sock >/dev/null; then
-        echo "ERROR: Zalenium needs /var/run/docker.sock but couldn't find it!"
-        exit 15
+    # If we have docker-machine then docker.sock is not in the current host
+    if ! docker-machine active; then
+        if ! ls /var/run/docker.sock >/dev/null 2>&1; then
+            echo "ERROR: Zalenium needs /var/run/docker.sock but couldn't find it!"
+            exit 15
+        fi
     fi
 
     echo "Done ${checking_and_or_updating} dependencies."
