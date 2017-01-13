@@ -219,8 +219,10 @@ StartZalenium()
       -e USER_ID=$(id -u) \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
+      -e SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}" \
       -e BROWSER_STACK_USER \
       -e BROWSER_STACK_KEY \
+      -e BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}" \
       -e TESTINGBOT_SECRET \
       -e TESTINGBOT_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
