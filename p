@@ -170,9 +170,10 @@ StartZalenium()
 
     # Sauce Labs
     if [ "${SAUCE_USERNAME}" == "" ]; then
+        echo "WARN: Sauce Labs will not be enabled because the var \$SAUCE_USERNAME is NOT present"
         SAUCE_LABS_ENABLED=false
     else
-        echo "Sauce Labs will be enabled because the var \$SAUCE_USERNAME is present"
+        echo "INFO: Sauce Labs will be enabled because the var \$SAUCE_USERNAME is present"
         if [ "${SAUCE_ACCESS_KEY}" == "" ]; then
             echo "\$SAUCE_USERNAME is set but \$SAUCE_ACCESS_KEY is not so failing..."
             exit 17
@@ -183,9 +184,10 @@ StartZalenium()
 
     # BrowserStack
     if [ "${BROWSER_STACK_USER}" == "" ]; then
+        echo "WARN: BrowserStack will not be enabled because the var \$BROWSER_STACK_USER is NOT present"
         BROWSER_STACK_ENABLED=false
     else
-        echo "BrowserStack will be enabled because the var \$BROWSER_STACK_USER is present"
+        echo "INFO: BrowserStack will be enabled because the var \$BROWSER_STACK_USER is present"
         if [ "${BROWSER_STACK_KEY}" == "" ]; then
             echo "\$BROWSER_STACK_USER is set but \$BROWSER_STACK_KEY is not so failing..."
             exit 18
@@ -196,9 +198,10 @@ StartZalenium()
 
     # Testing Bot
     if [ "${TESTINGBOT_SECRET}" == "" ]; then
+        echo "WARN: Testing Bot will not be enabled because the var \$TESTINGBOT_SECRET is NOT present"
         TESTINGBOT_ENABLED=false
     else
-        echo "Testing Bot will be enabled because the var \$TESTINGBOT_SECRET is present"
+        echo "INFO: Testing Bot will be enabled because the var \$TESTINGBOT_SECRET is present"
         if [ "${TESTINGBOT_KEY}" == "" ]; then
             echo "\$TESTINGBOT_SECRET is set but \$TESTINGBOT_KEY is not so failing..."
             exit 19
@@ -339,6 +342,11 @@ function CheckDependencies() {
     if ! wget --version >/dev/null; then
         echo "Please install wget, e.g. brew install wget"
         exit 8
+    fi
+
+    if ! jq --version >/dev/null; then
+        echo "Please install jq, e.g. brew install jq"
+        exit 20
     fi
 
     if ! mtimeout --version >/dev/null; then
