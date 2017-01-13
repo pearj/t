@@ -167,6 +167,8 @@ StartZalenium()
     [ -z "${VIDEO}" ] && VIDEO="true"
     [ -z "${SCREEN_WIDTH}" ] && SCREEN_WIDTH="1920"
     [ -z "${SCREEN_HEIGHT}" ] && SCREEN_HEIGHT="1080"
+    [ -z "${CHROME_START_COUNT}" ] && CHROME_START_COUNT="1"
+    [ -z "${FIREFOX_START_COUNT}" ] && FIREFOX_START_COUNT="1"
 
     # Sauce Labs
     if [ "${SAUCE_USERNAME}" == "" ]; then
@@ -222,8 +224,8 @@ StartZalenium()
       -e TESTINGBOT_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
       dosel/zalenium:${zalenium_tag} \
-      start --chromeContainers 1 \
-            --firefoxContainers 1 \
+      start --chromeContainers ${CHROME_START_COUNT} \
+            --firefoxContainers ${FIREFOX_START_COUNT} \
             --maxDockerSeleniumContainers 8 \
             --screenWidth ${SCREEN_WIDTH} --screenHeight ${SCREEN_HEIGHT} \
             --videoRecordingEnabled ${VIDEO} ${Z_START_OPTS} \
