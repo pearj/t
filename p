@@ -216,6 +216,7 @@ StartZalenium()
     docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
       -e BUILD_URL \
+      -e USER_ID=$(id -u) \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
       -e BROWSER_STACK_USER \
