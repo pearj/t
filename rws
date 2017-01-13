@@ -127,4 +127,9 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
   -e SELENIUM_URL="http://localhost:4444/wd/hub" \
   $@ && status=$? || status=$?
 
+if [ "${WITH_VIDEOS}" == "true" ]; then
+    # Wait some additional time
+    sleep 2
+fi
+
 shutdown
