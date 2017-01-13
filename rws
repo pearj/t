@@ -48,6 +48,17 @@ shutdown () {
 # Run function shutdown() when this process a killer signal
 trap shutdown SIGHUP SIGTERM SIGINT
 
+# Actively waits for Zalenium to fully starts
+# you can copy paste this in your Jenkins scripts
+WaitVideosTransfered()
+{
+    while ! ls ./videos/*; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitVideosTransfered
+
 # parse cli options http://stackoverflow.com/a/14203146/511069
 for i in "$@"; do
     case $i in
@@ -128,8 +139,9 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
   $@ && status=$? || status=$?
 
 if [ "${WITH_VIDEOS}" == "true" ]; then
-    # Wait some additional time
-    sleep 16
+    if ! mtimeout --foreground "30s" bash -c WaitVideosTransfered; then
+        echo "WARN: Failed while waiting for video files to exist."
+    fi
 fi
 
 shutdown
