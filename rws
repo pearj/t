@@ -3,12 +3,11 @@ set -e
 IFS=$'\t\n'
 
 # sane defaults
-SELE_TAG="latest"
-CHROME_COUNT="1"
-FIREFOX_COUNT="1"
+SELE_VER="2"
+CHROME_START_COUNT="1"
+FIREFOX_START_COUNT="1"
 WITH_VIDEOS="true"
 BUILD_NUMBER="0"
-SELE_IMAGE=elgalu/selenium
 status=101 #assumed it failed unless proved wrong
 # to count minutes of usage
 start_time=$(date +%s)
@@ -30,18 +29,10 @@ shutdown () {
   # shutdown selenium
   echo "INFO: Shutting down selenium..."
   if [ "${WITH_VIDEOS}" == "true" ]; then
-      if ! docker exec ${SEL_CONTAINER} stop-video; then
-          echo "WARN: Could not cleanly stop Selenium video recording!" >&2
-      fi
       mkdir -p ./videos
-      docker cp ${SEL_CONTAINER}:/videos/. videos
+      docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos
   fi
-  if ! docker stop ${SEL_CONTAINER}; then
-      echo "WARN: Could not cleanly stop Selenium service!" >&2
-  fi
-  if ! docker rm ${SEL_CONTAINER}; then
-      echo "WARN: Could not cleanly rm Selenium container!" >&2
-  fi
+  curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
   if [ "${WITH_VIDEOS}" == "true" ]; then
       if ! ls -la ./videos/; then
           echo "WARN: Videos should but were not transferred!" >&2
@@ -60,16 +51,16 @@ trap shutdown SIGHUP SIGTERM SIGINT
 # parse cli options http://stackoverflow.com/a/14203146/511069
 for i in "$@"; do
     case $i in
-        -t=*|--tag=*)
-        SELE_TAG="${i#*=}"
+        -s=*|--selenium=*)
+        SELE_VER="${i#*=}"
         shift # past argument=value
         ;;
         -c=*|--chrome-count=*)
-        CHROME_COUNT="${i#*=}"
+        CHROME_START_COUNT="${i#*=}"
         shift # past argument=value
         ;;
         -f=*|--firefox-count=*)
-        FIREFOX_COUNT="${i#*=}"
+        FIREFOX_START_COUNT="${i#*=}"
         shift # past argument=value
         ;;
         --no-videos)
@@ -82,12 +73,11 @@ for i in "$@"; do
     esac
 done
 
-SEL_CONTAINER="grid_${BUILD_NUMBER}"
+SEL_CONTAINER="zalenium"
 TEST_CONTAINER="test_${BUILD_NUMBER}"
-TOTAL_COUNT=$((${CHROME_COUNT} + ${FIREFOX_COUNT}))
 
 if [ $# -lt 1 ]; then
-    echo "Usage:  $0 [--tag=latest] [--chrome-count=1] [--firefox-count=1] <toolchain> [<toolchain-docker-opts>] -- <toolchain-command>" >&2
+    echo "Usage:  $0 [--selenium=2] [--chrome-count=1] [--firefox-count=1] <toolchain> [<toolchain-docker-opts>] -- <toolchain-command>" >&2
     echo "    Simple example:   $0 :toolchain-frontend -- gulp ui-test" >&2
     echo "    Advanced example: $0 --chrome-count=2 --firefox-count=2 :toolchain-frontend -- gulp ui-test" >&2
     #usage error arbitrary error number
@@ -100,6 +90,7 @@ TEST_DOCKER_IMAGE=$1
 shift 1
 
 # clean-up old Docker container
+docker stop ${SEL_CONTAINER} 2>/dev/null || true
 docker rm -fv ${SEL_CONTAINER} 2>/dev/null || true
 # clean-up old Docker containers
 docker rm -ff /test_0 2>/dev/null || true
@@ -109,29 +100,14 @@ docker rm -ff test_0 2>/dev/null || true
 ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} -- \
 echo "Pull the toolchain so doesn't take testing time"
 
-# Try to pull up to 3 times to avoid:
-#  https://github.com/docker/docker/issues/25711#issuecomment-240055670
-docker pull ${SELE_IMAGE}:${SELE_TAG} ||
-docker pull ${SELE_IMAGE}:${SELE_TAG} ||
-docker pull ${SELE_IMAGE}:${SELE_TAG}
-
 # start docker-selenium
 echo "INFO: Starting Selenium..."
-docker run -d --name=${SEL_CONTAINER} \
-  --shm-size=2g \
-  -e USER_ID=$(id -u) \
-  -e SELENIUM_HUB_PORT="4444" \
-  -e VIDEO=${WITH_VIDEOS} \
-  -e MAX_INSTANCES=${TOTAL_COUNT} \
-  -e MAX_SESSIONS=${TOTAL_COUNT} \
-  ${SELE_IMAGE}:${SELE_TAG}
+export VIDEO=${WITH_VIDEOS}
+curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s start
 
 # wait
-sleep 2
+sleep 0.5
 docker logs ${SEL_CONTAINER}
-
-# wait until selenium has bootstrapped
-docker exec ${SEL_CONTAINER} wait_all_done 120s
 
 start_time=$(date +%s)
 
