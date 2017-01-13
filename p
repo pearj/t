@@ -162,27 +162,72 @@ StartZalenium()
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro"
     fi
 
+    # Some more defaults
+    START_TUNNEL=false
+    [ -z "${VIDEO}" ] && VIDEO="true"
+    [ -z "${SCREEN_WIDTH}" ] && SCREEN_WIDTH="1920"
+    [ -z "${SCREEN_HEIGHT}" ] && SCREEN_HEIGHT="1080"
+
+    # Sauce Labs
+    if [ "${SAUCE_USERNAME}" == "" ]; then
+        SAUCE_LABS_ENABLED=false
+    else
+        echo "Sauce Labs will be enabled because the var \$SAUCE_USERNAME is present"
+        if [ "${SAUCE_ACCESS_KEY}" == "" ]; then
+            echo "\$SAUCE_USERNAME is set but \$SAUCE_ACCESS_KEY is not so failing..."
+            exit 17
+        fi
+        SAUCE_LABS_ENABLED=true
+        START_TUNNEL=true
+    fi
+
+    # BrowserStack
+    if [ "${BROWSER_STACK_USER}" == "" ]; then
+        BROWSER_STACK_ENABLED=false
+    else
+        echo "BrowserStack will be enabled because the var \$BROWSER_STACK_USER is present"
+        if [ "${BROWSER_STACK_KEY}" == "" ]; then
+            echo "\$BROWSER_STACK_USER is set but \$BROWSER_STACK_KEY is not so failing..."
+            exit 18
+        fi
+        BROWSER_STACK_ENABLED=true
+        START_TUNNEL=true
+    fi
+
+    # Testing Bot
+    if [ "${TESTINGBOT_SECRET}" == "" ]; then
+        TESTINGBOT_ENABLED=false
+    else
+        echo "Testing Bot will be enabled because the var \$TESTINGBOT_SECRET is present"
+        if [ "${TESTINGBOT_KEY}" == "" ]; then
+            echo "\$TESTINGBOT_SECRET is set but \$TESTINGBOT_KEY is not so failing..."
+            exit 19
+        fi
+        TESTINGBOT_ENABLED=true
+        START_TUNNEL=true
+    fi
+
     echo "Starting Zalenium in docker..."
     docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
       -e BUILD_URL \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
-      -e TESTINGBOT_SECRET \
-      -e TESTINGBOT_KEY \
       -e BROWSER_STACK_USER \
       -e BROWSER_STACK_KEY \
+      -e TESTINGBOT_SECRET \
+      -e TESTINGBOT_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
       dosel/zalenium:${zalenium_tag} \
       start --chromeContainers 1 \
             --firefoxContainers 1 \
             --maxDockerSeleniumContainers 8 \
-            --screenWidth 1920 --screenHeight 1080 ${Z_START_OPTS} \
-            --videoRecordingEnabled false \
-            --sauceLabsEnabled false \
-            --browserStackEnabled false \
-            --testingBotEnabled false \
-            --startTunnel false
+            --screenWidth ${SCREEN_WIDTH} --screenHeight ${SCREEN_HEIGHT} \
+            --videoRecordingEnabled ${VIDEO} ${Z_START_OPTS} \
+            --sauceLabsEnabled ${SAUCE_LABS_ENABLED} \
+            --browserStackEnabled ${BROWSER_STACK_ENABLED} \
+            --testingBotEnabled ${TESTINGBOT_ENABLED} \
+            --startTunnel ${START_TUNNEL}
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
