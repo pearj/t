@@ -48,6 +48,16 @@ shutdown () {
 # Run function shutdown() when this process a killer signal
 trap shutdown SIGHUP SIGTERM SIGINT
 
+# In OSX install gtimeout through
+#   brew install coreutils
+function mtimeout() {
+    if [ "$(uname -s)" = 'Darwin' ]; then
+        gtimeout "$@"
+    else
+        timeout "$@"
+    fi
+}
+
 # Actively waits for Zalenium to fully starts
 # you can copy paste this in your Jenkins scripts
 WaitVideosTransfered()
