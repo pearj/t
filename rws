@@ -129,7 +129,7 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
 
 if [ "${WITH_VIDEOS}" == "true" ]; then
     # Wait some additional time
-    sleep 8
+    sleep 16
 fi
 
 shutdown
