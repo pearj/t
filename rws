@@ -35,7 +35,10 @@ shutdown () {
       fi
       docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos || true
   fi
+
+  # Run up-to-date Zalenium stop command
   curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
+
   if [ "${WITH_VIDEOS}" == "true" ]; then
       if ! ls -la ./videos/; then
           echo "WARN: Videos should but were not transferred!" >&2
