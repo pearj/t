@@ -11,6 +11,8 @@ BUILD_NUMBER="0"
 status=101 #assumed it failed unless proved wrong
 # to count minutes of usage
 start_time=$(date +%s)
+SEL_CONTAINER="zalenium"
+TEST_CONTAINER="test_${BUILD_NUMBER}"
 
 TOOLS_DIR="/tools"
 
@@ -69,7 +71,8 @@ function mtimeout() {
 # you can copy paste this in your Jenkins scripts
 WaitVideosTransfered()
 {
-    while ! docker exec zalenium bash -c 'ls /home/seluser/videos/*' >/dev/null 2>&1; do
+    while ! docker exec ${SEL_CONTAINER} \
+            bash -c 'ls /home/seluser/videos/*' >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
@@ -100,9 +103,6 @@ for i in "$@"; do
         ;;
     esac
 done
-
-SEL_CONTAINER="zalenium"
-TEST_CONTAINER="test_${BUILD_NUMBER}"
 
 if [ $# -lt 1 ]; then
     echo "Usage:  $0 [--selenium=2] [--chrome-count=1] [--firefox-count=1] <toolchain> [<toolchain-docker-opts>] -- <toolchain-command>" >&2
@@ -137,7 +137,7 @@ sleep 0.5
 docker logs ${SEL_CONTAINER}
 
 if [ "${WITH_VIDEOS}" == "true" ]; then
-    docker exec zalenium mkdir -p /home/seluser/videos/
+    docker exec ${SEL_CONTAINER} mkdir -p /home/seluser/videos/
 fi
 
 start_time=$(date +%s)
