@@ -30,7 +30,8 @@ shutdown () {
   echo "INFO: Shutting down selenium..."
   if [ "${WITH_VIDEOS}" == "true" ]; then
       mkdir -p ./videos
-      if ! mtimeout --foreground "40s" bash -c WaitVideosTransfered; then
+      sleep 4 #give it some time to process all the videos
+      if ! mtimeout --foreground "30s" bash -c WaitVideosTransfered; then
           echo "WARN: Failed while waiting for video files to exist."
       fi
       docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos || true
@@ -68,7 +69,7 @@ function mtimeout() {
 # you can copy paste this in your Jenkins scripts
 WaitVideosTransfered()
 {
-    while ! ls ./videos/* >/dev/null 2>&1; do
+    while ! docker exec ${SEL_CONTAINER} ls /home/seluser/videos/* >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
