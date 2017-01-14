@@ -149,7 +149,7 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
   $@ && status=$? || status=$?
 
 if [ "${WITH_VIDEOS}" == "true" ]; then
-    if ! mtimeout --foreground "30s" bash -c WaitVideosTransfered; then
+    if ! mtimeout --foreground "40s" bash -c WaitVideosTransfered; then
         echo "WARN: Failed while waiting for video files to exist."
     fi
 fi
