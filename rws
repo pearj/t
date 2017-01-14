@@ -69,7 +69,7 @@ function mtimeout() {
 # you can copy paste this in your Jenkins scripts
 WaitVideosTransfered()
 {
-    while ! docker exec ${SEL_CONTAINER} ls /home/seluser/videos/* >/dev/null 2>&1; do
+    while ! docker exec zalenium bash -c 'ls /home/seluser/videos/*' >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
