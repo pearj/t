@@ -30,7 +30,10 @@ shutdown () {
   echo "INFO: Shutting down selenium..."
   if [ "${WITH_VIDEOS}" == "true" ]; then
       mkdir -p ./videos
-      docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos
+      if ! mtimeout --foreground "40s" bash -c WaitVideosTransfered; then
+          echo "WARN: Failed while waiting for video files to exist."
+      fi
+      docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos || true
   fi
   curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
   if [ "${WITH_VIDEOS}" == "true" ]; then
@@ -147,11 +150,5 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
   --net=container:${SEL_CONTAINER} \
   -e SELENIUM_URL="http://localhost:4444/wd/hub" \
   $@ && status=$? || status=$?
-
-if [ "${WITH_VIDEOS}" == "true" ]; then
-    if ! mtimeout --foreground "40s" bash -c WaitVideosTransfered; then
-        echo "WARN: Failed while waiting for video files to exist."
-    fi
-fi
 
 shutdown
