@@ -7,7 +7,6 @@ SELE_VER="2"
 CHROME_START_COUNT="1"
 FIREFOX_START_COUNT="1"
 WITH_VIDEOS="true"
-BUILD_NUMBER="0"
 status=101 #assumed it failed unless proved wrong
 # to count minutes of usage
 start_time=$(date +%s)
