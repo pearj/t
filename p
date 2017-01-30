@@ -170,6 +170,11 @@ StartZalenium()
     [ -z "${CHROME_START_COUNT}" ] && CHROME_START_COUNT="1"
     [ -z "${FIREFOX_START_COUNT}" ] && FIREFOX_START_COUNT="1"
 
+    # Map video folder if videos are enabled
+    if [ "${VIDEO}" == "true" ]; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
+    fi
+
     # Sauce Labs
     if [ "${SAUCE_USERNAME}" == "" ]; then
         echo "WARN: Sauce Labs will not be enabled because the var \$SAUCE_USERNAME is NOT present"
