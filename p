@@ -186,6 +186,7 @@ StartZalenium()
             exit 17
         fi
         SAUCE_LABS_ENABLED=true
+        SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         START_TUNNEL=true
     fi
 
@@ -200,6 +201,7 @@ StartZalenium()
             exit 18
         fi
         BROWSER_STACK_ENABLED=true
+        BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         START_TUNNEL=true
     fi
 
@@ -224,10 +226,10 @@ StartZalenium()
       -e USER_ID=$(id -u) \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
-      -e SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}" \
+      -e SAUCE_TUNNEL_ID \
       -e BROWSER_STACK_USER \
       -e BROWSER_STACK_KEY \
-      -e BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}" \
+      -e BROWSER_STACK_TUNNEL_ID \
       -e TESTINGBOT_SECRET \
       -e TESTINGBOT_KEY \
       -v /var/run/docker.sock:/var/run/docker.sock \
