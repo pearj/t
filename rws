@@ -140,6 +140,11 @@ if [ "${WITH_VIDEOS}" == "true" ]; then
     docker exec ${SEL_CONTAINER} mkdir -p /home/seluser/videos/
 fi
 
+# Sauce Labs or BrowserStack have tunnel IDs
+if [ "${SAUCE_USERNAME}" != "" ] || [ "${BROWSER_STACK_USER}" == "" ]; then
+    TUNNEL_ID="zalenium${BUILD_NUMBER}"
+fi
+
 start_time=$(date +%s)
 
 # execute real command
@@ -153,6 +158,33 @@ ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} \
   --name=${TEST_CONTAINER} \
   --net=container:${SEL_CONTAINER} \
   -e SELENIUM_URL="http://localhost:4444/wd/hub" \
+  -e TUNNEL_ID \
+  -e APPLICATION_ID \
+  -e OAUTH2_ACCESS_TOKEN_URL \
+  -e TOOLCHAIN_LOOKUP_PREFIX \
+  -e TOOLCHAIN_LOOKUP_REGISTRY \
+  -e TOOLCHAIN_LOOKUP_NAMESPACE \
+  -e TOKENINFO_URL \
+  -e KIO_URL \
+  -e CREDENTIALS_DIR \
+  -e MAVEN_MIRROR_URL \
+  -e MAVEN_SNAPSHOTS_URL \
+  -e MAVEN_USER \
+  -e MAVEN_RELEASES_URL \
+  -e BUILD_ID \
+  -e BUILD_TAG \
+  -e NODE_NAME \
+  -e EXECUTOR_NUMBER \
+  -e HUDSON_HOME \
+  -e JENKINS_HOME \
+  -e JENKINS_USER \
+  -e JENKINS_URL \
+  -e JOB_BASE_NAME \
+  -e JOB_NAME \
+  -e JOB_URL \
+  -e BUILD_DISPLAY_NAME \
+  -e BUILD_NUMBER \
+  -e BUILD_URL \
   $@ && status=$? || status=$?
 
 shutdown
