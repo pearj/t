@@ -186,7 +186,7 @@ StartZalenium()
             exit 17
         fi
         SAUCE_LABS_ENABLED=true
-        SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
+        export SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         START_TUNNEL=true
     fi
 
@@ -201,7 +201,7 @@ StartZalenium()
             exit 18
         fi
         BROWSER_STACK_ENABLED=true
-        BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}"
+        export BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         START_TUNNEL=true
     fi
 
