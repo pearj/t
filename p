@@ -80,7 +80,7 @@ WaitZaleniumStarted()
     set_mgrep
 
     DONE_MSG="Zalenium is now ready!"
-    while ! docker logs zalenium${BUILD_NUMBER} | ${M_GREP} "${DONE_MSG}" >/dev/null; do
+    while ! docker logs zalenium | ${M_GREP} "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -89,19 +89,19 @@ export -f WaitZaleniumStarted
 
 EnsureCleanEnv()
 {
-    CONTAINERS=$(docker ps -a -f name=zalenium${BUILD_NUMBER}_ -q | wc -l)
+    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=zalenium${BUILD_NUMBER}_ -q)
+        docker rm -f $(docker ps -a -f name=zalenium_ -q)
     fi
 }
 
 StartZalenium()
 {
-    CONTAINERS=$(docker ps -a -f name=zalenium${BUILD_NUMBER} -q | wc -l)
+    CONTAINERS=$(docker ps -a -f name=zalenium -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=zalenium${BUILD_NUMBER} -q)
+        docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
 
     # Set Zalenium config
@@ -186,7 +186,7 @@ StartZalenium()
             exit 17
         fi
         SAUCE_LABS_ENABLED=true
-        export SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
+        export SAUCE_TUNNEL_ID="zalenium"
         START_TUNNEL=true
     fi
 
@@ -201,7 +201,7 @@ StartZalenium()
             exit 18
         fi
         BROWSER_STACK_ENABLED=true
-        export BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}"
+        export BROWSER_STACK_TUNNEL_ID="zalenium"
         START_TUNNEL=true
     fi
 
@@ -220,7 +220,7 @@ StartZalenium()
     fi
 
     echo "Starting Zalenium in docker..."
-    docker run -d -t --name zalenium${BUILD_NUMBER} \
+    docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
       -e BUILD_URL \
       -e USER_ID=$(id -u) \
@@ -246,12 +246,12 @@ StartZalenium()
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
-        docker logs zalenium${BUILD_NUMBER}
+        docker logs zalenium
         exit 4
     fi
 
     # Below export is useless if this is run in a separate shell
-    export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium${BUILD_NUMBER})
+    export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
     export SEL_PORT="4444"
     export SELENIUM_URL="http://${SEL_HOST}:${SEL_PORT}/wd/hub"
 
@@ -526,8 +526,8 @@ done
 
 if [ "${stop_it}" == "true" ]; then
     echo "Stopping..."
-    docker stop zalenium${BUILD_NUMBER} >/dev/null 2>&1 || true
-    docker rm zalenium${BUILD_NUMBER} >/dev/null 2>&1 || true
+    docker stop zalenium >/dev/null 2>&1 || true
+    docker rm zalenium >/dev/null 2>&1 || true
     EnsureCleanEnv
     echo "Zalenium stopped!"
     exit 0
