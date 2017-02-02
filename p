@@ -175,6 +175,16 @@ StartZalenium()
         Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
     fi
 
+    # Pre-alpha Android emulation in Appium - appium port (4723)
+    if [ "${APPIUM_PORT}" != "" ]; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -p ${APPIUM_PORT}:${APPIUM_PORT}"
+    fi
+
+    # Pre-alpha Android emulation in Appium - vnc port (6080)
+    if [ "${APPIUM_VNC}" != "" ]; then
+        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -p ${APPIUM_VNC}:${APPIUM_VNC}"
+    fi
+
     # Sauce Labs
     if [ "${SAUCE_USERNAME}" == "" ]; then
         echo "WARN: Sauce Labs will not be enabled because the var \$SAUCE_USERNAME is NOT present"
