@@ -172,7 +172,10 @@ StartZalenium()
 
     # Map video folder if videos are enabled
     if [ "${VIDEO}" == "true" ]; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
+        # This doesn't work in certain peculiar environment
+        if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
+            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
+        fi
     fi
 
     # Pre-alpha Android emulation in Appium - appium port (4723)
