@@ -245,6 +245,8 @@ StartZalenium()
       -e BROWSER_STACK_TUNNEL_ID \
       -e TESTINGBOT_SECRET \
       -e TESTINGBOT_KEY \
+      -e HOST_GID=$(id -g) \
+      -e HOST_UID=$(id -u) \
       -v /var/run/docker.sock:/var/run/docker.sock \
       dosel/zalenium:${zalenium_tag} \
       start --chromeContainers ${CHROME_START_COUNT} \
