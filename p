@@ -173,7 +173,7 @@ StartZalenium()
     # Map video folder if videos are enabled
     if [ "${VIDEO}" == "true" ]; then
         # This doesn't work in certain peculiar environment
-        if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
+        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" == "" ]; then
             Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
         fi
     fi
@@ -236,7 +236,6 @@ StartZalenium()
     docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
       -e BUILD_URL \
-      -e USER_ID=$(id -u) \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
       -e SAUCE_TUNNEL_ID \
@@ -457,7 +456,7 @@ stop_it="false"
 zalenium_tag="latest"
 
 # Overwrite defaults in certain peculiar environments
-if [ ! -z ${TOOLCHAIN_LOOKUP_REGISTRY} ]; then
+if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
     upgrade_if_needed="true"
     we_have_sudo="false"
 fi
