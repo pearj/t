@@ -199,7 +199,7 @@ StartZalenium()
             exit 17
         fi
         SAUCE_LABS_ENABLED=true
-        export SAUCE_TUNNEL_ID="zalenium"
+        export SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         START_TUNNEL=true
     fi
 
