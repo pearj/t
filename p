@@ -174,6 +174,7 @@ StartZalenium()
     if [ "${VIDEO}" == "true" ]; then
         # This doesn't work in certain peculiar environment
         if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" == "" ]; then
+            mkdir -p /tmp/videos
             Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
         fi
     fi
@@ -232,6 +233,8 @@ StartZalenium()
         START_TUNNEL=true
     fi
 
+    mkdir -p /tmp/mounted
+
     echo "Starting Zalenium in docker..."
     docker run -d -t --name zalenium \
       -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
@@ -247,6 +250,7 @@ StartZalenium()
       -e HOST_GID=$(id -g) \
       -e HOST_UID=$(id -u) \
       -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/mounted:/tmp/mounted \
       dosel/zalenium:${zalenium_tag} \
       start --chromeContainers ${CHROME_START_COUNT} \
             --firefoxContainers ${FIREFOX_START_COUNT} \

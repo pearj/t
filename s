@@ -13,8 +13,12 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-# http://selenium-python.readthedocs.org/en/latest/api.html
-caps = DesiredCapabilities.CHROME
+# http://selenium-python.readthedocs.io/api.html#desired-capabilities
+# Create a desired capabilities object as a starting point.
+caps = DesiredCapabilities.CHROME.copy()
+caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', '')
+caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
+
 sel_host = os.environ.get('SEL_HOST', 'localhost')
 sel_port = os.environ.get('SEL_PORT', '4444')
 sel_url = "http://%s:%s/wd/hub" % (sel_host, sel_port)
