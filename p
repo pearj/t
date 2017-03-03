@@ -89,155 +89,168 @@ export -f WaitZaleniumStarted
 
 EnsureCleanEnv()
 {
-    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
+    local __containers=$(docker ps -a -f name=zalenium_ -q | wc -l)
+    
+    if [ ${__containers} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
         docker rm -f $(docker ps -a -f name=zalenium_ -q)
     fi
 }
 
-StartZalenium()
-{
-    CONTAINERS=$(docker ps -a -f name=zalenium -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
-        echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=zalenium -q)
+getDockerOpts(){
+    
+    # Supported: 1.11, 1.12, 1.13
+    local __docker_ver=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
+    
+    local __z_default_docker_opts="--name zalenium -p 4444:4444 -p 5555:5555"
+    local __z_docker_opts="${__z_default_docker_opts}"
+    local __z_startup_opts=""
+    local __interactive="${1}"
+
+
+    if [ "${__interactive}" == "true" ]; then
+        __z_docker_opts="${__z_docker_opts} -i"
+    else
+        __z_docker_opts="${__z_docker_opts} -t -d"
     fi
 
-    # Set Zalenium config
-    #  e.g. DOCKER_VER_MAJ_MIN=1.11
-    #  e.g. DOCKER_VER_MAJ_MIN=1.12
-    #  e.g. DOCKER_VER_MAJ_MIN=1.13
-    DOCKER_VER_MAJ_MIN=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
-    Z_DOCKER_OPTS=""
-    Z_START_OPTS=""
+
+    if [ -n "${FORCED_DOCKER_OPTS}" ]; then
+        __z_docker_opts="${FORCED_DOCKER_OPTS}"
+    else
+        __z_docker_opts="${__z_docker_opts} ${CUSTOM_DOCKER_OPTS}"
+    fi
+
 
     if docker-machine active >/dev/null 2>&1; then
         # With docker-machine the file might not be here
         # but will be available during docker run
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/bin/docker:/usr/bin/docker"
+        __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
     else
         if [ -f /usr/bin/docker ]; then
-            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/bin/docker:/usr/bin/docker"
+            __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
         else
             # This should only be necessary in docker native for OSX
-            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -e DOCKER=${DOCKER_VER_MAJ_MIN}"
+            __z_docker_opts="${__z_docker_opts} -e DOCKER=${__docker_ver}"
         fi
     fi
 
+
     if [ -f /etc/timezone ]; then
-        Z_START_OPTS="${Z_START_OPTS} --timeZone $(cat /etc/timezone)"
+        __z_startup_opts="${__z_startup_opts} --timeZone $(cat /etc/timezone)"
         # TODO: else: Figure out how to get timezone in OSX
     fi
 
+
+    # Docker in docker in docker related fixes
     if ls /lib/x86_64-linux-gnu/libsystemd-journal.so.0 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libsystemd-journal.so.0:/lib/x86_64-linux-gnu/libsystemd-journal.so.0:ro"
     fi
 
     if ls /lib/x86_64-linux-gnu/libcgmanager.so.0 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libcgmanager.so.0:/lib/x86_64-linux-gnu/libcgmanager.so.0:ro"
     fi
 
     if ls /lib/x86_64-linux-gnu/libnih.so.1 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libnih.so.1:/lib/x86_64-linux-gnu/libnih.so.1:ro"
     fi
 
     if ls /lib/x86_64-linux-gnu/libnih-dbus.so.1 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libnih-dbus.so.1:/lib/x86_64-linux-gnu/libnih-dbus.so.1:ro"
     fi
 
     if ls /lib/x86_64-linux-gnu/libdbus-1.so.3 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libdbus-1.so.3:/lib/x86_64-linux-gnu/libdbus-1.so.3:ro"
     fi
 
     if ls /lib/x86_64-linux-gnu/libgcrypt.so.11 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro"
+        __z_docker_opts="${__z_docker_opts} -v /lib/x86_64-linux-gnu/libgcrypt.so.11:/lib/x86_64-linux-gnu/libgcrypt.so.11:ro"
     fi
 
     if ls /usr/lib/x86_64-linux-gnu/libapparmor.so.1 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro"
+        __z_docker_opts="${__z_docker_opts} -v /usr/lib/x86_64-linux-gnu/libapparmor.so.1:/usr/lib/x86_64-linux-gnu/libapparmor.so.1:ro"
     fi
 
     if ls /usr/lib/x86_64-linux-gnu/libltdl.so.7 >/dev/null 2>&1; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro"
+        __z_docker_opts="${__z_docker_opts} -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro"
     fi
 
-    # Some more defaults
-    START_TUNNEL=false
-    [ -z "${VIDEO}" ] && VIDEO="true"
-    [ -z "${SCREEN_WIDTH}" ] && SCREEN_WIDTH="1920"
-    [ -z "${SCREEN_HEIGHT}" ] && SCREEN_HEIGHT="1080"
-    [ -z "${CHROME_START_COUNT}" ] && CHROME_START_COUNT="1"
-    [ -z "${FIREFOX_START_COUNT}" ] && FIREFOX_START_COUNT="1"
+
+    local __start_tunnel=false
+    local __video=${VIDEO:-"true"}
+    local __screen_width=${SCREEN_WIDTH:-"1920"}
+    local __screen_height=${SCREEN_HEIGHT:-"1080"}
+    local __chrome_count=${CHROME_START_COUNT:-"1"}
+    local __firefox_count=${FIREFOX_START_COUNT:-"1"}
+    local __max_containers=${MAX_CONTAINERS_COUNT:-"10"}
 
     # Map video folder if videos are enabled
-    if [ "${VIDEO}" == "true" ]; then
+    local __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
+    if [ "${__video}" == "true" ]; then
         # This doesn't work in certain peculiar environment
         if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" == "" ]; then
-            mkdir -p /tmp/videos
-            Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -v /tmp/videos:/home/seluser/videos"
+            mkdir -p "${__videos_dir}"
+            __z_docker_opts="${__z_docker_opts} -v ${__videos_dir}:/home/seluser/videos"
         fi
     fi
 
     # Pre-alpha Android emulation in Appium - appium port (4723)
     if [ "${APPIUM_PORT}" != "" ]; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -p ${APPIUM_PORT}:${APPIUM_PORT}"
+        __z_docker_opts="${__z_docker_opts} -p ${APPIUM_PORT}:${APPIUM_PORT}"
     fi
 
     # Pre-alpha Android emulation in Appium - vnc port (6080)
     if [ "${APPIUM_VNC}" != "" ]; then
-        Z_DOCKER_OPTS="${Z_DOCKER_OPTS} -p ${APPIUM_VNC}:${APPIUM_VNC}"
+        __z_docker_opts="${__z_docker_opts} -p ${APPIUM_VNC}:${APPIUM_VNC}"
     fi
 
     # Sauce Labs
     if [ "${SAUCE_USERNAME}" == "" ]; then
-        echo "WARN: Sauce Labs will not be enabled because the var \$SAUCE_USERNAME is NOT present"
+        echo "WARN: Sauce Labs will not be enabled because the var \$SAUCE_USERNAME is NOT present" >&2
         SAUCE_LABS_ENABLED=false
     else
-        echo "INFO: Sauce Labs will be enabled because the var \$SAUCE_USERNAME is present"
+        echo "INFO: Sauce Labs will be enabled because the var \$SAUCE_USERNAME is present" >&2
         if [ "${SAUCE_ACCESS_KEY}" == "" ]; then
-            echo "\$SAUCE_USERNAME is set but \$SAUCE_ACCESS_KEY is not so failing..."
+            echo "\$SAUCE_USERNAME is set but \$SAUCE_ACCESS_KEY is not so failing..." >&2
             exit 17
         fi
         SAUCE_LABS_ENABLED=true
         export SAUCE_TUNNEL_ID="zalenium${BUILD_NUMBER}"
-        START_TUNNEL=true
+        __start_tunnel=true
     fi
 
     # BrowserStack
     if [ "${BROWSER_STACK_USER}" == "" ]; then
-        echo "WARN: BrowserStack will not be enabled because the var \$BROWSER_STACK_USER is NOT present"
+        echo "WARN: BrowserStack will not be enabled because the var \$BROWSER_STACK_USER is NOT present" >&2
         BROWSER_STACK_ENABLED=false
     else
-        echo "INFO: BrowserStack will be enabled because the var \$BROWSER_STACK_USER is present"
+        echo "INFO: BrowserStack will be enabled because the var \$BROWSER_STACK_USER is present" >&2
         if [ "${BROWSER_STACK_KEY}" == "" ]; then
-            echo "\$BROWSER_STACK_USER is set but \$BROWSER_STACK_KEY is not so failing..."
+            echo "\$BROWSER_STACK_USER is set but \$BROWSER_STACK_KEY is not so failing..." >&2
             exit 18
         fi
         BROWSER_STACK_ENABLED=true
         export BROWSER_STACK_TUNNEL_ID="zalenium"
-        START_TUNNEL=true
+        __start_tunnel=true
     fi
 
     # Testing Bot
     if [ "${TESTINGBOT_SECRET}" == "" ]; then
-        echo "WARN: Testing Bot will not be enabled because the var \$TESTINGBOT_SECRET is NOT present"
+        echo "WARN: Testing Bot will not be enabled because the var \$TESTINGBOT_SECRET is NOT present" >&2
         TESTINGBOT_ENABLED=false
     else
-        echo "INFO: Testing Bot will be enabled because the var \$TESTINGBOT_SECRET is present"
+        echo "INFO: Testing Bot will be enabled because the var \$TESTINGBOT_SECRET is present" >&2
         if [ "${TESTINGBOT_KEY}" == "" ]; then
-            echo "\$TESTINGBOT_SECRET is set but \$TESTINGBOT_KEY is not so failing..."
+            echo "\$TESTINGBOT_SECRET is set but \$TESTINGBOT_KEY is not so failing..." >&2
             exit 19
         fi
         TESTINGBOT_ENABLED=true
-        START_TUNNEL=true
+        __start_tunnel=true
     fi
 
     mkdir -p /tmp/mounted
 
-    echo "Starting Zalenium in docker..."
-    docker run -d -t --name zalenium \
-      -p 4444:4444 -p 5555:5555 ${Z_DOCKER_OPTS} \
+    echo ${__z_docker_opts} \
       -e BUILD_URL \
       -e SAUCE_USERNAME \
       -e SAUCE_ACCESS_KEY \
@@ -252,28 +265,39 @@ StartZalenium()
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/mounted:/tmp/mounted \
       dosel/zalenium:${zalenium_tag} \
-      start --chromeContainers ${CHROME_START_COUNT} \
-            --firefoxContainers ${FIREFOX_START_COUNT} \
-            --maxDockerSeleniumContainers 8 \
-            --screenWidth ${SCREEN_WIDTH} --screenHeight ${SCREEN_HEIGHT} \
-            --videoRecordingEnabled ${VIDEO} ${Z_START_OPTS} \
+      start ${__z_startup_opts} \
+            --chromeContainers "${__chrome_count}" \
+            --firefoxContainers "${__firefox_count}" \
+            --maxDockerSeleniumContainers "${__max_containers}" \
+            --screenWidth "${__screen_width}" --screenHeight "${__screen_height}" \
+            --videoRecordingEnabled "${__video}" \
             --sauceLabsEnabled ${SAUCE_LABS_ENABLED} \
             --browserStackEnabled ${BROWSER_STACK_ENABLED} \
             --testingBotEnabled ${TESTINGBOT_ENABLED} \
-            --startTunnel ${START_TUNNEL}
+            --startTunnel "${__start_tunnel}"
+}
 
-    if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
-        echo "Zalenium failed to start after 2 minutes, failing..."
-        docker logs zalenium
-        exit 4
+StartZalenium(){
+
+    echo "Starting Zalenium in docker..."
+
+    local opts="$(getDockerOpts ${INTERACTIVE})"
+    docker run ${opts}
+
+    if [ -z "${INTERACTIVE}" ]; then
+        if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
+            echo "Zalenium failed to start after 2 minutes, failing..."
+            docker logs zalenium
+            exit 4
+        fi
+
+        # Below export is useless if this is run in a separate shell
+        export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+        export SEL_PORT="4444"
+        export SELENIUM_URL="http://${SEL_HOST}:${SEL_PORT}/wd/hub"
+
+        echo "Zalenium in docker started!"
     fi
-
-    # Below export is useless if this is run in a separate shell
-    export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
-    export SEL_PORT="4444"
-    export SELENIUM_URL="http://${SEL_HOST}:${SEL_PORT}/wd/hub"
-
-    echo "Zalenium in docker started!"
 }
 
 function InstallDockerCompose() {
@@ -300,30 +324,6 @@ function InstallDockerCompose() {
 #   VersionGt "1.12.3" "1.12.3" #=> exit 1
 function VersionGt() {
     test "$(printf '%s\n' "$@" | ${M_SORT} -V | head -n 1)" != "$1";
-}
-
-function usage() {
-    echo "Usage:"
-    echo ""
-    echo "$0"
-    echo -e "\t -h --help"
-    echo -e "\t -s -> Starts Zalenium after downloading."
-    echo -e "\t -u ."
-    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
-    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
-    echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
-    echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
-    echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
-    echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
-    echo ""
-    echo -e "\t stop"
-    echo ""
-    echo -e "\t Examples:"
-    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
-    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
-    echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
-    echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
 
 function CheckDependencies() {
@@ -416,7 +416,7 @@ function CheckDependencies() {
         if ! VersionGt "${DOCKER_COMPOSE_VERSION}" "1.7.0"; then
             echo "Current docker-compose version '${DOCKER_COMPOSE_VERSION}' is not supported by Zalenium"
             if [ "${upgrade_if_needed}" == "true" ]; then
-                echo "Will upgarde docker-compose because you passed the 'upd' argument"
+                echo "Will upgrade docker-compose because you passed the 'upd' argument"
                 #InstallDockerCompose
             else
                 echo "Docker-compose version >= 1.7.1 is required"
@@ -448,6 +448,43 @@ function PullDependencies() {
     docker pull elgalu/selenium:latest || \
     docker pull elgalu/selenium:latest || \
     docker pull elgalu/selenium:latest
+}
+
+function usage() {
+    echo "Usage:"
+    echo ""
+    echo "$0"
+    echo -e "\t -h, --help\t\t\tPrint usage"
+    echo ""
+    echo -e "\t Start/stop:"
+    echo ""
+    echo -e "\t start, -s, --start\t\tStart Zalenium"
+    echo -e "\t stop, --stop\t\t\tStop Zalenium"
+    echo -e "\t -i, --interactive\t\t\tAttach to current process (default detached)"
+    echo -e "\t --docker-opt\t\t\tCustom Zalenium docker startup options"
+    echo -e "\t --force-docker-opts\t\tOverwrite the default Zalenium docker startup options"
+    #echo -e "\t -u ." //TODO: define upgrade mechanism
+    echo ""
+    echo -e "\t Tests:"
+    echo ""
+    echo -e "\t --firefoxContainers\t\tNumber of Firefox containers created on startup (default 1)"
+    echo -e "\t --chromeContainers\t\tNumber of Chrome containers created on startup (default 1)"
+    echo -e "\t --maxDockerSeleniumContainers\tMax number of docker-selenium containers running at the same time (default 10)"
+    echo -e "\t --sauceLabsEnabled\t\tDetermines if the Sauce Labs node is started (default true)"
+    echo -e "\t --videoRecordingEnabled\tRecord video of tests (default true)"
+    echo -e "\t --videos-dir\tDirectory where to store videos (default /tmp/videos)"
+    echo -e "\t --screenWidth\t\t\tSets the screen width (default 1900)"
+    echo -e "\t --screenHeight\t\t\tSets the screen height (default 1800)"
+    echo -e "\t --timeZone\t\t\tSets the time zone in the containers (default \"Europe/Berlin\")"
+    echo ""
+
+    echo ""
+    echo -e "\t Examples:"
+    echo ""
+    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
+    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
+    echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
 
 #----------
@@ -497,6 +534,17 @@ while [ "$1" != "" ]; do
         --no-sudo)
             we_have_sudo="false"
             ;;
+         -i | --interactive)
+            INTERACTIVE="true"
+            ;;
+        --docker-opt)
+            CUSTOM_DOCKER_OPTS="${CUSTOM_DOCKER_OPTS} ${2}"
+            shift
+            ;;
+        --force-docker-opts)
+            FORCED_DOCKER_OPTS="${FORCED_DOCKER_OPTS} ${2}"
+            shift
+            ;;
         --start)
             start_it="true"
             ;;
@@ -514,6 +562,33 @@ while [ "$1" != "" ]; do
             ;;
         stop)
             stop_it="true"
+            ;;
+        --chromeContainers)
+            CHROME_START_COUNT="${2}"
+            shift
+            ;;
+        --firefoxContainers)
+            FIREFOX_START_COUNT="${2}"
+            shift
+            ;;
+        --maxDockerSeleniumContainers)
+            MAX_CONTAINERS_COUNT="${2}"
+            shift
+            ;;
+        --screenWidth)
+            SCREEN_WIDTH="${2}"
+            shift
+            ;;
+        --screenHeight)
+            SCREEN_HEIGHT="${2}"
+            shift
+            ;;
+        --videoRecordingEnabled)
+            VIDEO="true"
+            ;;
+         --videos-dir)
+            VIDEOS_DIR="${2}"
+            shift
             ;;
         3)
             echo "Checking last pushed Zalenium for Selenium 3 ..."
@@ -561,5 +636,6 @@ CheckDependencies
 PullDependencies
 
 if [ "${start_it}" == "true" ]; then
+    EnsureCleanEnv
     StartZalenium
 fi
