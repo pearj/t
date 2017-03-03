@@ -584,7 +584,8 @@ while [ "$1" != "" ]; do
             shift
             ;;
         --videoRecordingEnabled)
-            VIDEO="true"
+            VIDEO="${2}"
+            shift
             ;;
          --videos-dir)
             VIDEOS_DIR="${2}"
