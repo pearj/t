@@ -125,10 +125,10 @@ getDockerOpts(){
     if docker-machine active >/dev/null 2>&1; then
         # With docker-machine the file might not be here
         # but will be available during docker run
-        __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
+        __z_docker_opts="${__z_docker_opts} -v /usr/local/bin/docker:/usr/bin/docker"
     else
         if [ -f /usr/bin/docker ]; then
-            __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
+            __z_docker_opts="${__z_docker_opts} -v /usr/local/bin/docker:/usr/bin/docker"
         else
             # This should only be necessary in docker native for OSX
             __z_docker_opts="${__z_docker_opts} -e DOCKER=${__docker_ver}"
