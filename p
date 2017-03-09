@@ -90,7 +90,7 @@ export -f WaitZaleniumStarted
 EnsureCleanEnv()
 {
     local __containers=$(docker ps -a -f name=zalenium_ -q | wc -l)
-    
+
     if [ ${__containers} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
         docker rm -f $(docker ps -a -f name=zalenium_ -q)
@@ -98,10 +98,10 @@ EnsureCleanEnv()
 }
 
 getDockerOpts(){
-    
+
     # Supported: 1.11, 1.12, 1.13
     local __docker_ver=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
-    
+
     local __z_default_docker_opts="--name zalenium -p 4444:4444 -p 5555:5555"
     local __z_docker_opts="${__z_default_docker_opts}"
     local __z_startup_opts=""
@@ -230,7 +230,7 @@ getDockerOpts(){
             exit 18
         fi
         BROWSER_STACK_ENABLED=true
-        export BROWSER_STACK_TUNNEL_ID="zalenium"
+        export BROWSER_STACK_TUNNEL_ID="zalenium${BUILD_NUMBER}"
         __start_tunnel=true
     fi
 
@@ -592,14 +592,10 @@ while [ "$1" != "" ]; do
             shift
             ;;
         3)
-            echo "Checking last pushed Zalenium for Selenium 3 ..."
-            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | ${M_GREP} -E "^3.*" | head -1)
-            echo "Will use Zalenium tag: ${zalenium_tag}"
+            zalenium_tag="3"
             ;;
         2)
-            echo "Checking last pushed Zalenium for Selenium 2 ..."
-            zalenium_tag=$(curl -sSL 'https://registry.hub.docker.com/v2/repositories/dosel/zalenium/tags' | jq -r '."results"[]["name"]' | ${M_GREP} -E "^2.*" | head -1)
-            echo "Will use Zalenium tag: ${zalenium_tag}"
+            zalenium_tag="2"
             ;;
         3*)
             zalenium_tag="$1"
