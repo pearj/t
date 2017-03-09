@@ -109,7 +109,7 @@ getDockerOpts(){
 
 
     if [ "${__interactive}" == "true" ]; then
-        __z_docker_opts="${__z_docker_opts} -i"
+        __z_docker_opts="${__z_docker_opts} --rm -i"
     else
         __z_docker_opts="${__z_docker_opts} -t -d"
     fi
@@ -124,11 +124,16 @@ getDockerOpts(){
 
     if docker-machine active >/dev/null 2>&1; then
         # With docker-machine the file might not be here
-        # but will be available during docker run
-        __z_docker_opts="${__z_docker_opts} -v /usr/local/bin/docker:/usr/bin/docker"
+        # but will be available during docker run.
+        # Also on some installations executable is in /usr/local/bin
+        if [ -f /usr/local/bin/docker ]; then
+            __z_docker_opts="${__z_docker_opts} -v /usr/local/bin/docker:/usr/bin/docker"
+        else
+            __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
+        fi
     else
         if [ -f /usr/bin/docker ]; then
-            __z_docker_opts="${__z_docker_opts} -v /usr/local/bin/docker:/usr/bin/docker"
+            __z_docker_opts="${__z_docker_opts} -v /usr/bin/docker:/usr/bin/docker"
         else
             # This should only be necessary in docker native for OSX
             __z_docker_opts="${__z_docker_opts} -e DOCKER=${__docker_ver}"
