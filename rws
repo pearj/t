@@ -39,7 +39,7 @@ shutdown () {
   fi
 
   # Run up-to-date Zalenium stop command
-  curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
+  curl -sSL "https://raw.githubusercontent.com/ifadin/t/i/p" | bash -s stop
 
   if [ "${WITH_VIDEOS}" == "true" ]; then
       if ! ls -la ./videos/; then
@@ -130,7 +130,7 @@ echo "Pull the toolchain so doesn't take testing time"
 
 echo "INFO: Starting Selenium..."
 export VIDEO=${WITH_VIDEOS}
-curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
+curl -sSL "https://raw.githubusercontent.com/ifadin/t/i/p" | bash -s ${SELE_VER} start
 
 # wait
 sleep 0.5
