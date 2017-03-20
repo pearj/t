@@ -251,17 +251,17 @@ getDockerOpts(){
     mkdir -p /tmp/mounted
 
     echo ${__z_docker_opts} \
-      -e BUILD_URL \
-      -e SAUCE_USERNAME \
-      -e SAUCE_ACCESS_KEY \
-      -e SAUCE_TUNNEL_ID \
-      -e BROWSER_STACK_USER \
-      -e BROWSER_STACK_KEY \
-      -e BROWSER_STACK_TUNNEL_ID \
-      -e TESTINGBOT_SECRET \
-      -e TESTINGBOT_KEY \
-      -e HOST_GID=$(id -g) \
-      -e HOST_UID=$(id -u) \
+      -e BUILD_URL="${BUILD_URL}" \
+      -e SAUCE_USERNAME="${SAUCE_USERNAME}" \
+      -e SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY}" \
+      -e SAUCE_TUNNEL_ID="${SAUCE_TUNNEL_ID}" \
+      -e BROWSER_STACK_USER="${BROWSER_STACK_USER}" \
+      -e BROWSER_STACK_KEY="${BROWSER_STACK_KEY}" \
+      -e BROWSER_STACK_TUNNEL_ID="${BROWSER_STACK_TUNNEL_ID}" \
+      -e TESTINGBOT_SECRET="${TESTINGBOT_SECRET}" \
+      -e TESTINGBOT_KEY="${TESTINGBOT_KEY}" \
+      -e HOST_GID="${HOST_GID}"=$(id -g) \
+      -e HOST_UID="${HOST_UID}"=$(id -u) \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/mounted:/tmp/mounted \
       dosel/zalenium:${zalenium_tag} \
