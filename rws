@@ -72,7 +72,7 @@ WaitVideosTransfered()
 {
     [ -z "${SEL_CONTAINER}" ] && SEL_CONTAINER="zalenium"
     while ! docker exec ${SEL_CONTAINER} \
-            bash -c 'ls /home/seluser/videos/*' >/dev/null 2>&1; do
+            bash -c 'ls /home/seluser/videos/*.mp4' >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
