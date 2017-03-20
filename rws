@@ -32,7 +32,7 @@ shutdown () {
   if [ "${WITH_VIDEOS}" == "true" ]; then
       mkdir -p ./videos
       sleep 4 #give it some time to process all the videos
-      if ! mtimeout --foreground "30s" bash -c WaitVideosTransfered; then
+      if ! mtimeout --foreground "30s" bash -c WaitVideosAndDashBoardTransfered; then
           echo "WARN: Failed while waiting for video files to exist."
       fi
       docker cp ${SEL_CONTAINER}:/home/seluser/videos/. videos || true
@@ -68,16 +68,23 @@ function mtimeout() {
 
 # Actively waits for Zalenium to fully starts
 # you can copy paste this in your Jenkins scripts
-WaitVideosTransfered()
+WaitVideosAndDashBoardTransfered()
 {
     [ -z "${SEL_CONTAINER}" ] && SEL_CONTAINER="zalenium"
+
     while ! docker exec ${SEL_CONTAINER} \
             bash -c 'ls /home/seluser/videos/*.mp4' >/dev/null 2>&1; do
         echo -n '.'
         sleep 0.2
     done
+
+    while ! docker exec ${SEL_CONTAINER} \
+            bash -c 'ls /home/seluser/videos/dashboard.html' >/dev/null 2>&1; do
+        echo -n '.'
+        sleep 0.2
+    done
 }
-export -f WaitVideosTransfered
+export -f WaitVideosAndDashBoardTransfered
 
 # parse cli options http://stackoverflow.com/a/14203146/511069
 for i in "$@"; do
