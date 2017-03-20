@@ -15,7 +15,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 # http://selenium-python.readthedocs.io/api.html#desired-capabilities
 # Create a desired capabilities object as a starting point.
-caps = DesiredCapabilities.CHROME.copy()
+caps = {'browserName': os.environ.get('CAPS_BROWSER_NAME', 'chrome')}
 caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', '')
 caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
 
