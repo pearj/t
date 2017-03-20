@@ -17,7 +17,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # Create a desired capabilities object as a starting point.
 caps = DesiredCapabilities.FIREFOX.copy()
 caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', '')
-# caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
+caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
 
 sel_host = os.environ.get('SEL_HOST', 'localhost')
 sel_port = os.environ.get('SEL_PORT', '4444')
