@@ -265,8 +265,8 @@ getDockerOpts(){
       -e BROWSER_STACK_TUNNEL_ID="${BROWSER_STACK_TUNNEL_ID}" \
       -e TESTINGBOT_SECRET="${TESTINGBOT_SECRET}" \
       -e TESTINGBOT_KEY="${TESTINGBOT_KEY}" \
-      -e HOST_GID="$(id -g)" \
       -e HOST_UID="$(id -u)" \
+      -e HOST_GID="$(id -g)" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/mounted:/tmp/mounted \
       dosel/zalenium:${zalenium_tag} \
@@ -621,7 +621,7 @@ done
 
 if [ "${stop_it}" == "true" ]; then
     echo "Stopping..."
-    docker stop zalenium >/dev/null 2>&1 || true
+    docker stop zalenium || true
     docker rm zalenium >/dev/null 2>&1 || true
     EnsureCleanEnv
     echo "Zalenium stopped!"
