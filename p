@@ -97,6 +97,27 @@ EnsureCleanEnv()
     fi
 }
 
+toolchainStop() {
+    # This works differently in certain peculiar environment
+    if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
+        # find the slave container
+        SLAVE_CONTAINER=
+        for contid in $(docker ps -q); do
+            if [ ! -z "$(docker inspect $contid | grep 'jenkins-slave-startup.sh')" ]; then
+                SLAVE_CONTAINER=$contid
+                break
+            fi
+        done
+
+        # Testing
+        docker run --rm -v /tmp/videos:/tmp/videos --volumes-from ${SLAVE_CONTAINER} \
+            ls -la /tmp/videos/*
+
+        docker run --rm -v /tmp/videos:/tmp/videos --volumes-from ${SLAVE_CONTAINER} \
+            ls -la /home/master
+    fi
+}
+
 getDockerOpts(){
 
     # Supported: 1.11, 1.12, 1.13
@@ -192,15 +213,6 @@ getDockerOpts(){
     # Map video folder if videos are enabled
     local __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
     if [ "${__video}" == "true" ]; then
-        # This works differently in certain peculiar environment
-        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
-            if [ "${WORKSPACE}" != "" ]; then
-                __videos_dir="$(WORKSPACE)/videos"
-            else
-                __videos_dir="${PWD}/videos"
-            fi
-        fi
-
         mkdir -p "${__videos_dir}"
         __z_docker_opts="${__z_docker_opts} -v ${__videos_dir}:/home/seluser/videos"
     fi
@@ -626,11 +638,14 @@ while [ "$1" != "" ]; do
 done
 
 if [ "${stop_it}" == "true" ]; then
-    docker logs zalenium
-    echo ""
-    echo "Stopping Zalenium..."
-    docker stop --time 60 zalenium || true
-    docker rm zalenium >/dev/null 2>&1 || true
+    if docker logs zalenium; then
+        echo ""
+        echo "Stopping Zalenium..."
+        docker stop --time 60 zalenium
+        docker rm zalenium >/dev/null 2>&1
+        toolchainStop
+    fi
+
     EnsureCleanEnv
     echo "Zalenium stopped!"
     exit 0
