@@ -109,6 +109,7 @@ echo "Pull the toolchain so doesn't take testing time"
 
 echo "INFO: Starting Selenium..."
 export VIDEO=${WITH_VIDEOS}
+curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
 # wait
