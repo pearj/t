@@ -100,20 +100,12 @@ EnsureCleanEnv()
 toolchainStop() {
     # This works differently in certain peculiar environment
     if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
-        # find the slave container
-        SLAVE_CONTAINER=
-        for contid in $(docker ps -q); do
-            if [ ! -z "$(docker inspect $contid | grep 'jenkins-slave-startup.sh')" ]; then
-                SLAVE_CONTAINER=$contid
-                break
-            fi
-        done
+        rm -rf ./videos
 
-        # Testing
-        docker run --rm -v /tmp:/tmp alpine ls -la /tmp/videos/*
+        /tools/run :stups -v /tmp:/tmp -- \
+            cp --recursive --copy-contents /tmp/videos/${BUILD_NUMBER} ./videos
 
-        docker run --rm -v /tmp:/tmp alpine \
-            --volumes-from ${SLAVE_CONTAINER} ls -la /home/master
+        ls -la ./videos
     fi
 }
 
@@ -210,9 +202,20 @@ getDockerOpts(){
     local __max_containers=${MAX_CONTAINERS_COUNT:-"10"}
 
     # Map video folder if videos are enabled
-    local __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
     if [ "${__video}" == "true" ]; then
-        mkdir -p "${__videos_dir}"
+        local __videos_dir=""
+        # This works differently in certain peculiar environment
+        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
+            __videos_dir="/tmp/videos/${BUILD_NUMBER}"
+            export HOST_UID="$(id -u)"
+            export HOST_GID="$(id -g)"
+            docker run --rm -v /tmp:/tmp alpine mkdir -p ${__videos_dir}
+            docker run --rm -v /tmp:/tmp alpine chown -R ${HOST_UID}:${HOST_GID} ${__videos_dir}
+        else
+            __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
+            mkdir -p "${__videos_dir}"
+        fi
+
         __z_docker_opts="${__z_docker_opts} -v ${__videos_dir}:/home/seluser/videos"
     fi
 
