@@ -3,7 +3,8 @@ set -e
 IFS=$'\t\n'
 
 # sane defaults
-SELE_VER="latest"
+# When SELE_VER="" it will use latest
+SELE_VER=""
 CHROME_START_COUNT="1"
 FIREFOX_START_COUNT="1"
 WITH_VIDEOS="true"
