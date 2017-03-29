@@ -646,6 +646,7 @@ if [ "${stop_it}" == "true" ]; then
     if docker logs zalenium; then
         echo ""
         if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
+            docker attach zalenium &
             echo "Waiting for video processing..."
             sleep 20
         fi
