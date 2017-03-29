@@ -110,10 +110,10 @@ toolchainStop() {
         done
 
         # Testing
-        docker run --rm -v /tmp/videos:/tmp/videos registry.opensource.zalan.do/stups/openjdk \
+        docker run --rm -v /tmp:/tmp registry.opensource.zalan.do/stups/openjdk \
             --volumes-from ${SLAVE_CONTAINER} ls -la /tmp/videos/*
 
-        docker run --rm -v /tmp/videos:/tmp/videos registry.opensource.zalan.do/stups/openjdk \
+        docker run --rm -v /tmp:/tmp registry.opensource.zalan.do/stups/openjdk \
             --volumes-from ${SLAVE_CONTAINER} ls -la /home/master
     fi
 }
