@@ -32,7 +32,6 @@ shutdown () {
   echo "INFO: Shutting down selenium..."
   # Run up-to-date Zalenium stop command
   curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
-  docker logs zalenium
 
   if [ "${WITH_VIDEOS}" == "true" ]; then
       if ! ls -la ./videos/; then
