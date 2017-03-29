@@ -622,8 +622,8 @@ while [ "$1" != "" ]; do
 done
 
 if [ "${stop_it}" == "true" ]; then
-    echo "Stopping..."
-    docker stop zalenium || true
+    echo "Stopping Zalenium..."
+    docker stop --time 60 zalenium || true
     docker rm zalenium >/dev/null 2>&1 || true
     EnsureCleanEnv
     echo "Zalenium stopped!"
