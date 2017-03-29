@@ -642,7 +642,7 @@ if [ "${stop_it}" == "true" ]; then
         echo ""
         echo "Stopping Zalenium..."
         docker stop --time 60 zalenium
-        docker rm zalenium >/dev/null 2>&1
+        docker rm zalenium >/dev/null 2>&1 || true
         toolchainStop
     fi
 
