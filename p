@@ -192,11 +192,8 @@ getDockerOpts(){
     # Map video folder if videos are enabled
     local __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
     if [ "${__video}" == "true" ]; then
-        # This doesn't work in certain peculiar environment
-        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" == "" ]; then
-            mkdir -p "${__videos_dir}"
-            __z_docker_opts="${__z_docker_opts} -v ${__videos_dir}:/home/seluser/videos"
-        fi
+        mkdir -p "${__videos_dir}"
+        __z_docker_opts="${__z_docker_opts} -v ${__videos_dir}:/home/seluser/videos"
     fi
 
     # Pre-alpha Android emulation in Appium - appium port (4723)

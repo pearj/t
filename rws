@@ -143,10 +143,6 @@ curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} 
 sleep 0.5
 docker logs ${SEL_CONTAINER}
 
-if [ "${WITH_VIDEOS}" == "true" ]; then
-    docker exec ${SEL_CONTAINER} mkdir -p /home/seluser/videos/
-fi
-
 # Sauce Labs or BrowserStack have tunnel IDs
 if [ "${SAUCE_USERNAME}" != "" ] || [ "${BROWSER_STACK_USER}" != "" ]; then
     export TUNNEL_ID="zalenium${BUILD_NUMBER}"
