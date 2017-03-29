@@ -100,12 +100,15 @@ EnsureCleanEnv()
 toolchainStop() {
     # This works differently in certain peculiar environment
     if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
-        rm -rf ./videos
+        local __video=${VIDEO:-"true"}
+        if [ "${__video}" == "true" ]; then
+            rm -rf ./videos
 
-        /tools/run :stups -v /tmp:/tmp -- \
-            cp --recursive --copy-contents /tmp/videos/${BUILD_NUMBER} ./videos
+            /tools/run :stups -v /tmp:/tmp -- \
+                cp --recursive --copy-contents /tmp/videos/${BUILD_NUMBER} ./videos
 
-        ls -la ./videos
+            ls -la ./videos
+        fi
     fi
 }
 
@@ -642,6 +645,10 @@ done
 if [ "${stop_it}" == "true" ]; then
     if docker logs zalenium; then
         echo ""
+        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
+            echo "Waiting for video processing..."
+            sleep 20
+        fi
         echo "Stopping Zalenium..."
         docker stop --time 60 zalenium
         docker rm zalenium >/dev/null 2>&1 || true
