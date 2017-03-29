@@ -194,7 +194,11 @@ getDockerOpts(){
     if [ "${__video}" == "true" ]; then
         # This works differently in certain peculiar environment
         if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
-            __videos_dir="$(pwd)/videos"
+            if [ "${WORKSPACE}" != "" ]; then
+                __videos_dir="$(WORKSPACE)/videos"
+            else
+                __videos_dir="${PWD}/videos"
+            fi
         fi
 
         mkdir -p "${__videos_dir}"
