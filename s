@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Dependencies
-#  pip install -U selenium
+#  pip install -U selenium==3.3.1
 # Usage
 #  curl -sSL https://raw.github.com/dosel/t/i/s | python
 import time

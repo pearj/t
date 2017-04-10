@@ -20,7 +20,7 @@
 
 ## Tiny smoke python selenium test
 
-    pip install --user --upgrade selenium
+    pip install --user --upgrade selenium==3.3.1
     curl -sSL https://raw.github.com/dosel/t/i/s | python
 
 ## Cleanup
