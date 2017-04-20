@@ -85,8 +85,12 @@ WaitZaleniumStarted()
         sleep 0.2
     done
 
+    # Below export is useless if this is run in a separate shell
+    local __sel_host=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+    local __selenium_grid_console="http://${__sel_host}:4444/grid/console"
+
     # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+    while ! curl -sSL "${__selenium_grid_console}" 2>&1 \
             | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -326,11 +330,6 @@ StartZalenium(){
             exit 4
         fi
 
-        # Below export is useless if this is run in a separate shell
-        export SEL_HOST=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
-        export SEL_PORT="4444"
-        export SELENIUM_URL="http://${SEL_HOST}:${SEL_PORT}/wd/hub"
-
         echo "Zalenium in docker started!"
     fi
 }
@@ -480,6 +479,9 @@ function PullDependencies() {
     docker pull dosel/zalenium:${zalenium_tag}
 
     # https://github.com/elgalu/docker-selenium
+    # TODO: Grab first number from ${zalenium_tag}
+    #       and use that tag to pull elgalu/selenium
+    #       guard: "latest"
     docker pull elgalu/selenium:latest || \
     docker pull elgalu/selenium:latest || \
     docker pull elgalu/selenium:latest
