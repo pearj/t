@@ -84,7 +84,7 @@ for i in "$@"; do
 done
 
 if [ $# -lt 1 ]; then
-    echo "Usage:  $0 [--selenium=2] [--chrome-count=1] [--firefox-count=1] <toolchain> [<toolchain-docker-opts>] -- <toolchain-command>" >&2
+    echo "Usage:  $0 [--selenium=3] [--chrome-count=1] [--firefox-count=1] <toolchain> [<toolchain-docker-opts>] -- <toolchain-command>" >&2
     echo "    Simple example:   $0 :toolchain-frontend -- gulp ui-test" >&2
     echo "    Advanced example: $0 --chrome-count=2 --firefox-count=2 :toolchain-frontend -- gulp ui-test" >&2
     #usage error arbitrary error number
@@ -113,19 +113,23 @@ curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
 # wait
-docker logs zalenium_40000 || true
-docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
+echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
 sleep 0.5
 docker logs ${SEL_CONTAINER}
 sleep 0.5
-docker logs zalenium_40000 || true
-docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
+echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
 sleep 0.5
-docker logs zalenium_40000 || true
-docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
+echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
 sleep 0.5
-docker logs zalenium_40000 || true
-docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
+echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
+echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
 
 # Sauce Labs or BrowserStack have tunnel IDs
 if [ "${SAUCE_USERNAME}" != "" ] || [ "${BROWSER_STACK_USER}" != "" ]; then
