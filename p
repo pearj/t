@@ -628,12 +628,20 @@ while [ "$1" != "" ]; do
         3)
             zalenium_tag="3"
             ;;
+        2)
+            echo "Unsupported version 2 so falling back to Selenium 3"
+            zalenium_tag="3"
+            ;;
         3*)
+            echo "Unsupported version 2 so falling back to Selenium 3"
+            zalenium_tag="3"
+            ;;
+        2*)
             zalenium_tag="$1"
             echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
         *)
-            echo "ERROR: unknown parameter or non supported version \"$PARAM\""
+            echo "ERROR: unknown parameter \"$PARAM\""
             usage
             exit 10
             ;;
