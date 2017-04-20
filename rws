@@ -112,24 +112,9 @@ export VIDEO=${WITH_VIDEOS}
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
-# wait
-echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
-echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
-echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
+# wait a bit to show some logs
 sleep 0.5
 docker logs ${SEL_CONTAINER}
-sleep 0.5
-echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
-echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
-echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
-sleep 0.5
-echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
-echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
-echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
-sleep 0.5
-echo "DEBUG-zalenium_40000" && docker logs zalenium_40000 || true
-echo "DEBUG-zalenium_40001" && docker logs zalenium_40001 || true
-echo "DEBUG-zalenium_40002" && docker logs zalenium_40002 || true
 
 # Sauce Labs or BrowserStack have tunnel IDs
 if [ "${SAUCE_USERNAME}" != "" ] || [ "${BROWSER_STACK_USER}" != "" ]; then
