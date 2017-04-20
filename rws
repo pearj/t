@@ -113,8 +113,19 @@ curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
 # wait
+docker logs zalenium_40000 || true
+docker logs zalenium_40001 || true
 sleep 0.5
 docker logs ${SEL_CONTAINER}
+sleep 0.5
+docker logs zalenium_40000 || true
+docker logs zalenium_40001 || true
+sleep 0.5
+docker logs zalenium_40000 || true
+docker logs zalenium_40001 || true
+sleep 0.5
+docker logs zalenium_40000 || true
+docker logs zalenium_40001 || true
 
 # Sauce Labs or BrowserStack have tunnel IDs
 if [ "${SAUCE_USERNAME}" != "" ] || [ "${BROWSER_STACK_USER}" != "" ]; then
