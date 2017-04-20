@@ -479,12 +479,9 @@ function PullDependencies() {
     docker pull dosel/zalenium:${zalenium_tag}
 
     # https://github.com/elgalu/docker-selenium
-    # TODO: Grab first number from ${zalenium_tag}
-    #       and use that tag to pull elgalu/selenium
-    #       guard: "latest"
-    docker pull elgalu/selenium:latest || \
-    docker pull elgalu/selenium:latest || \
-    docker pull elgalu/selenium:latest
+    docker pull elgalu/selenium:${zalenium_tag} || \
+    docker pull elgalu/selenium:${zalenium_tag} || \
+    docker pull elgalu/selenium:${zalenium_tag}
 }
 
 function usage() {
@@ -631,19 +628,12 @@ while [ "$1" != "" ]; do
         3)
             zalenium_tag="3"
             ;;
-        2)
-            zalenium_tag="2"
-            ;;
         3*)
             zalenium_tag="$1"
             echo "Will use Zalenium tag: ${zalenium_tag}"
             ;;
-        2*)
-            zalenium_tag="$1"
-            echo "Will use Zalenium tag: ${zalenium_tag}"
-            ;;
         *)
-            echo "ERROR: unknown parameter \"$PARAM\""
+            echo "ERROR: unknown parameter or non supported version \"$PARAM\""
             usage
             exit 10
             ;;
