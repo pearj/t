@@ -84,6 +84,13 @@ WaitZaleniumStarted()
         echo -n '.'
         sleep 0.2
     done
+
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
 }
 export -f WaitZaleniumStarted
 
