@@ -319,7 +319,7 @@ getDockerOpts(){
 ShutDownZalenium(){
     echo "Terminating Zalenium properly..."
 
-    local __containers=$(docker ps -f name=zalenium -q | wc -l)
+    local __containers=$(docker ps -f=ancestor=dosel/zalenium -q | wc -l)
     if [ ${__containers} -gt 0 ]; then
         if [ -z "${INTERACTIVE}" ]; then
             docker logs zalenium
@@ -332,12 +332,12 @@ ShutDownZalenium(){
         docker stop --time 90 zalenium
     fi
 
-    __containers=$(docker ps -a -f name=zalenium -q | wc -l)
+    __containers=$(docker ps -a -f=ancestor=dosel/zalenium -q | wc -l)
     if [ ${__containers} -gt 0 ]; then
         docker rm zalenium
     fi
 
-    __containers=$(docker ps -a -f name=zalenium -q | wc -l)
+    __containers=$(docker ps -a -f=ancestor=dosel/zalenium -q | wc -l)
     if [ ${__containers} -gt 0 ]; then
         docker rm -f zalenium
     fi
