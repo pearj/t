@@ -135,7 +135,7 @@ getDockerOpts(){
 
 
     if [ "${__interactive}" == "true" ]; then
-        __z_docker_opts="${__z_docker_opts} --rm -i"
+        __z_docker_opts="${__z_docker_opts} -t --rm"
     else
         __z_docker_opts="${__z_docker_opts} -t -d"
     fi
@@ -223,8 +223,8 @@ getDockerOpts(){
             __videos_dir="/tmp/videos/${BUILD_NUMBER}"
             export HOST_UID="$(id -u)"
             export HOST_GID="$(id -g)"
-            docker run --rm -v /tmp:/tmp alpine mkdir -p ${__videos_dir}
-            docker run --rm -v /tmp:/tmp alpine chown -R ${HOST_UID}:${HOST_GID} ${__videos_dir}
+            docker run --rm -v /tmp:/tmp alpine mkdir -p ${__videos_dir} >&2
+            docker run --rm -v /tmp:/tmp alpine chown -R ${HOST_UID}:${HOST_GID} ${__videos_dir} >&2
         else
             __videos_dir=${VIDEOS_DIR:-"/tmp/videos"}
             mkdir -p "${__videos_dir}"
@@ -316,6 +316,38 @@ getDockerOpts(){
             --startTunnel "${__start_tunnel}"
 }
 
+ShutDownZalenium(){
+    echo "Terminating Zalenium properly..."
+
+    local __containers=$(docker ps -f name=zalenium -q | wc -l)
+    if [ ${__containers} -gt 0 ]; then
+        if [ -z "${INTERACTIVE}" ]; then
+            docker logs zalenium
+        fi
+        docker attach --no-stdin zalenium &
+        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
+            echo "Waiting for video processing..."
+            sleep 60
+        fi
+        docker stop --time 90 zalenium
+    fi
+
+    __containers=$(docker ps -a -f name=zalenium -q | wc -l)
+    if [ ${__containers} -gt 0 ]; then
+        docker rm zalenium
+    fi
+
+    __containers=$(docker ps -a -f name=zalenium -q | wc -l)
+    if [ ${__containers} -gt 0 ]; then
+        docker rm -f zalenium
+    fi
+
+    toolchainStop
+    EnsureCleanEnv
+    echo "Zalenium stopped!"
+    exit 0
+}
+
 StartZalenium(){
 
     echo "Starting Zalenium in docker..."
@@ -324,6 +356,8 @@ StartZalenium(){
     docker run ${opts}
 
     if [ -z "${INTERACTIVE}" ]; then
+        # When running in daemon mode we want to wait for Zalenium to start
+        # before returning the prompt to the user
         if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
             echo "Zalenium failed to start after 2 minutes, failing..."
             docker logs zalenium
@@ -478,10 +512,11 @@ function PullDependencies() {
     docker pull dosel/zalenium:${zalenium_tag} || \
     docker pull dosel/zalenium:${zalenium_tag}
 
+    [ -z "${dosel_tag}" ] && dosel_tag="${zalenium_tag}"
     # https://github.com/elgalu/docker-selenium
-    docker pull elgalu/selenium:${zalenium_tag} || \
-    docker pull elgalu/selenium:${zalenium_tag} || \
-    docker pull elgalu/selenium:${zalenium_tag}
+    docker pull elgalu/selenium:${dosel_tag} || \
+    docker pull elgalu/selenium:${dosel_tag} || \
+    docker pull elgalu/selenium:${dosel_tag}
 }
 
 function usage() {
@@ -633,15 +668,16 @@ while [ "$1" != "" ]; do
             zalenium_tag="3"
             ;;
         3*)
-            echo "Unsupported version 2 so falling back to Selenium 3"
-            zalenium_tag="3"
+            echo "Will use zalenium:${PARAM} and docker-selenium:3"
+            zalenium_tag="${PARAM}"
+            dosel_tag="3"
             ;;
         2*)
             zalenium_tag="$1"
-            echo "Will use Zalenium tag: ${zalenium_tag}"
+            echo "Will use zalenium:${zalenium_tag}"
             ;;
         *)
-            echo "ERROR: unknown parameter \"$PARAM\""
+            echo "ERROR: unknown parameter \"${PARAM}\""
             usage
             exit 10
             ;;
@@ -649,23 +685,10 @@ while [ "$1" != "" ]; do
     shift 1
 done
 
-if [ "${stop_it}" == "true" ]; then
-    if docker logs zalenium; then
-        echo ""
-        if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
-            docker attach --no-stdin zalenium &
-            echo "Waiting for video processing..."
-            sleep 20
-        fi
-        echo "Stopping Zalenium..."
-        docker stop --time 60 zalenium
-        docker rm zalenium >/dev/null 2>&1 || true
-        toolchainStop
-    fi
+trap ShutDownZalenium SIGTERM SIGINT
 
-    EnsureCleanEnv
-    echo "Zalenium stopped!"
-    exit 0
+if [ "${stop_it}" == "true" ]; then
+    ShutDownZalenium
 fi
 
 if [ "${upgrade_if_needed}" == "true" ]; then
