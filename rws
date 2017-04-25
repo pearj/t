@@ -107,13 +107,15 @@ docker rm -ff test_0 2>/dev/null || true
 ${TOOLS_DIR}/run ${TEST_DOCKER_IMAGE} -- \
 echo "Pull the toolchain so doesn't take testing time"
 
-echo "INFO: Starting Selenium..."
 export VIDEO=${WITH_VIDEOS}
+echo "INFO: Cleaning up previous Selenium instances..."
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
+echo "INFO: Starting Selenium..."
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
 # wait a bit to show some logs
 sleep 0.5
+echo "INFO: Retrieving current Zalenium logs..."
 docker logs ${SEL_CONTAINER}
 
 # Sauce Labs or BrowserStack have tunnel IDs
