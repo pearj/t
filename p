@@ -698,7 +698,9 @@ else
 fi
 
 CheckDependencies
-PullDependencies
+if [ "${PULL_DEPENDENCIES}" != "false" ]; then
+    PullDependencies
+fi
 
 if [ "${start_it}" == "true" ]; then
     EnsureCleanEnv
