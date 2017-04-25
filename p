@@ -303,6 +303,7 @@ getDockerOpts(){
       -e HOST_GID="$(id -g)" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/mounted:/tmp/mounted \
+      --label zalenium_main \
       dosel/zalenium:${zalenium_tag} \
       start ${__z_startup_opts} \
             --chromeContainers "${__chrome_count}" \
@@ -319,7 +320,7 @@ getDockerOpts(){
 ShutDownZalenium(){
     echo "Terminating Zalenium properly..."
 
-    local __containers=$(docker ps -f=ancestor=dosel/zalenium -q | wc -l)
+    local __containers=$(docker ps -q --filter "label=zalenium_main" | wc -l)
     if [ ${__containers} -gt 0 ]; then
         if [ -z "${INTERACTIVE}" ]; then
             docker logs zalenium
@@ -332,12 +333,12 @@ ShutDownZalenium(){
         docker stop --time 90 zalenium
     fi
 
-    __containers=$(docker ps -a -f=ancestor=dosel/zalenium -q | wc -l)
+    __containers=$(docker ps -a -q --filter "label=zalenium_main" | wc -l)
     if [ ${__containers} -gt 0 ]; then
         docker rm zalenium
     fi
 
-    __containers=$(docker ps -a -f=ancestor=dosel/zalenium -q | wc -l)
+    __containers=$(docker ps -a -q --filter "label=zalenium_main" | wc -l)
     if [ ${__containers} -gt 0 ]; then
         docker rm -f zalenium
     fi
@@ -473,6 +474,12 @@ function CheckDependencies() {
         echo "Docker is installed but doesn't seem to be running properly."
         echo "Make sure docker commands like 'docker ps' work."
         exit 13
+    fi
+
+    if ! docker ps -a -q --filter "label=zalenium_main" >/dev/null; then
+        echo "Docker is installed but the current version doesn't support --filter."
+        echo "Make sure you have a recent or latest version of Docker."
+        exit 21
     fi
 
     if ! docker-compose --version >/dev/null 2>&1; then
