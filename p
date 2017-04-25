@@ -113,12 +113,12 @@ toolchainStop() {
     if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
         local __video=${VIDEO:-"true"}
         if [ "${__video}" == "true" ]; then
-            rm -rf ./videos
+            rm -rf ./videos || true
 
             /tools/run :stups -v /tmp:/tmp -- \
-                cp --recursive --copy-contents /tmp/videos/${BUILD_NUMBER} ./videos
+                cp --recursive --copy-contents /tmp/videos/${BUILD_NUMBER} ./videos || true
 
-            ls -la ./videos
+            ls -la ./videos || true
         fi
     fi
 }
