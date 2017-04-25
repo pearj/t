@@ -85,16 +85,19 @@ WaitZaleniumStarted()
         sleep 0.2
     done
 
-    # Below export is useless if this is run in a separate shell
-    local __sel_host=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
-    local __selenium_grid_console="http://${__sel_host}:4444/grid/console"
+    if [ "$(uname -s)" != 'Darwin' ]; then
+        # This doesn't work properly on OSX
+        # Below export is useless if this is run in a separate shell
+        local __sel_host=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+        local __selenium_grid_console="http://${__sel_host}:4444/grid/console"
 
-    # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "${__selenium_grid_console}" 2>&1 \
-            | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
-        echo -n '.'
-        sleep 0.2
-    done
+        # Also wait for the Proxy to be registered into the hub
+        while ! curl -sSL "${__selenium_grid_console}" 2>&1 \
+                | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
+            echo -n '.'
+            sleep 0.2
+        done
+    fi
 }
 export -f WaitZaleniumStarted
 
