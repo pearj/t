@@ -131,8 +131,14 @@ getDockerOpts(){
     # Supported: 1.11, 1.12, 1.13
     local __docker_ver=$(docker --version | ${M_GREP} -Po '(?<=version )([a-z0-9]+\.[a-z0-9]+)')
 
-    local __z_default_docker_opts="--name zalenium -p 4444:4444 -p 5555:5555"
-    local __z_docker_opts="${__z_default_docker_opts}"
+    local __z_default_docker_opts="--name zalenium"
+
+    if [ "${USE_NET_HOST}" == "true" ]; then
+        local __z_docker_opts="${__z_default_docker_opts} --net=host"
+    else
+        local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 -p 5555:5555"
+    fi
+
     local __z_startup_opts=""
     local __interactive="${1}"
 
@@ -238,12 +244,18 @@ getDockerOpts(){
 
     # Pre-alpha Android emulation in Appium - appium port (4723)
     if [ "${APPIUM_PORT}" != "" ]; then
-        __z_docker_opts="${__z_docker_opts} -p ${APPIUM_PORT}:${APPIUM_PORT}"
+        # Only export ports when not using --net=host
+        if [ "${USE_NET_HOST}" != "true" ]; then
+            __z_docker_opts="${__z_docker_opts} -p ${APPIUM_PORT}:${APPIUM_PORT}"
+        fi
     fi
 
     # Pre-alpha Android emulation in Appium - vnc port (6080)
     if [ "${APPIUM_VNC}" != "" ]; then
-        __z_docker_opts="${__z_docker_opts} -p ${APPIUM_VNC}:${APPIUM_VNC}"
+        # Only export ports when not using --net=host
+        if [ "${USE_NET_HOST}" != "true" ]; then
+            __z_docker_opts="${__z_docker_opts} -p ${APPIUM_VNC}:${APPIUM_VNC}"
+        fi
     fi
 
     # Sauce Labs
