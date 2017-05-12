@@ -136,7 +136,7 @@ getDockerOpts(){
     if [ "${USE_NET_HOST}" == "true" ]; then
         local __z_docker_opts="${__z_default_docker_opts} --net=host"
     else
-        local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 -p 5555:5555"
+        local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 -p 5555:5555 ${ADDITIONAL_DOCKER_OPTS}"
     fi
 
     local __z_startup_opts=""
@@ -318,6 +318,7 @@ getDockerOpts(){
       -e HOST_GID="$(id -g)" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/mounted:/tmp/mounted \
+      -v /dev/shm:/dev/shm \
       --label zalenium_main \
       dosel/zalenium:${zalenium_tag} \
       start ${__z_startup_opts} \
