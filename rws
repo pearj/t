@@ -109,12 +109,12 @@ echo "Pull the toolchain so doesn't take testing time"
 
 export VIDEO=${WITH_VIDEOS}
 echo "INFO: Cleaning up previous Selenium instances..."
-curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop
+curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s stop >/dev/null 2>&1
 echo "INFO: Starting Selenium..."
 curl -sSL "https://raw.githubusercontent.com/dosel/t/i/p" | bash -s ${SELE_VER} start
 
-# wait a bit to show some logs
-sleep 0.5
+# wait a bit more to show the complete logs
+sleep 2
 echo "INFO: Retrieving current Zalenium logs..."
 docker logs ${SEL_CONTAINER}
 
