@@ -317,6 +317,7 @@ getDockerOpts(){
       -e HOST_UID="$(id -u)" \
       -e HOST_GID="$(id -g)" \
       -v /var/run/docker.sock:/var/run/docker.sock \
+      --privileged \
       -v /tmp/mounted:/tmp/mounted \
       -v /dev/shm:/dev/shm \
       --label zalenium_main \
