@@ -7,6 +7,7 @@
 #  curl -sSL https://raw.github.com/dosel/t/i/s | python
 import time
 import os
+import datetime
 
 # Import the Selenium 2 namespace (aka "webdriver")
 from selenium import webdriver
@@ -47,7 +48,7 @@ sel_host = os.environ.get('SEL_HOST', 'localhost')
 sel_port = os.environ.get('SEL_PORT', '4444')
 sel_url = "http://%s:%s/wd/hub" % (sel_host, sel_port)
 myselenium = os.environ.get('SELENIUM_URL', sel_url)
-print ("%s - Will connect to selenium at %s" % (longId, myselenium))
+print ("%s %s - Will connect to selenium at %s" % (datetime.datetime.utcnow(), longId, myselenium))
 
 # http://selenium-python.readthedocs.org/en/latest/getting-started.html#using-selenium-with-remote-webdriver
 driver = webdriver.Remote(command_executor=myselenium, desired_capabilities=caps)
@@ -55,19 +56,19 @@ driver = webdriver.Remote(command_executor=myselenium, desired_capabilities=caps
 
 # Test: https://code.google.com/p/chromium/issues/detail?id=519952
 pageurl = "http://www.google.com/adwords"
-print ("%s - Opening page %s" % (longId, pageurl))
+print ("%s %s - Opening page %s" % (datetime.datetime.utcnow(), longId, pageurl))
 driver.get(pageurl)
 
 # Set location top left and size to max allowed on the container
 driver.set_window_position(0, 0)
 driver.set_window_size(width, height)
 
-print ("%s - Current title: %s" % (longId, driver.title))
-print ("%s - Asserting 'Google Adwords' in driver.title" % (longId))
+print ("%s %s - Current title: %s" % (datetime.datetime.utcnow(), longId, driver.title))
+print ("%s %s - Asserting 'Google Adwords' in driver.title" % (datetime.datetime.utcnow(), longId))
 assert "Google AdWords" in driver.title
 
-print ("%s - Close driver and clean up" % (longId))
+print ("%s %s - Close driver and clean up" % (datetime.datetime.utcnow(), longId))
 driver.close()
 
-print ("%s - All done. SUCCESS!" % (longId))
+print ("%s %s - All done. SUCCESS!" % (datetime.datetime.utcnow(), longId))
 driver.quit()
