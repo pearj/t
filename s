@@ -13,26 +13,35 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-optId = os.environ.get('TEST_ID', '')
-if optId != '':
-    optId = "%s - " % (optId)
-
 # http://selenium-python.readthedocs.io/api.html#desired-capabilities
 # Create a desired capabilities object as a starting point.
 browserName = os.environ.get('CAPS_BROWSER_NAME', 'chrome')
+
+# Group tests by `build`
+buildId = "%s%s" % (os.environ.get('JOB_NAME', ''), os.environ.get('BUILD_NUMBER', ''))
+if buildId == '':
+    buildId = 'zalenium-build'
+
+# Within `build` identify one test by `name`
+nameId = os.environ.get('TEST_ID', 'test-adwords')
+
+# Have a long Id for the log outpus
+longId = "%s - %s - %s" % (buildId, nameId, browserName)
+
+# Build the capabilities
 caps = {'browserName': browserName}
 caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', 'ANY')
 caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
 caps['tunnel-identifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
-caps['name'] = optId
-caps['build'] = browserName
+caps['name'] = nameId
+caps['build'] = buildId
 caps['recordVideo'] = 'true'
 
 sel_host = os.environ.get('SEL_HOST', 'localhost')
 sel_port = os.environ.get('SEL_PORT', '4444')
 sel_url = "http://%s:%s/wd/hub" % (sel_host, sel_port)
 myselenium = os.environ.get('SELENIUM_URL', sel_url)
-print ("%s%s - Will connect to selenium at %s" % (optId, browserName, myselenium))
+print ("%s - Will connect to selenium at %s" % (longId, myselenium))
 
 # http://selenium-python.readthedocs.org/en/latest/getting-started.html#using-selenium-with-remote-webdriver
 driver = webdriver.Remote(command_executor=myselenium, desired_capabilities=caps)
@@ -40,17 +49,17 @@ driver = webdriver.Remote(command_executor=myselenium, desired_capabilities=caps
 
 # Test: https://code.google.com/p/chromium/issues/detail?id=519952
 pageurl = "http://www.google.com/adwords"
-print ("%s%s - Opening page %s" % (optId, browserName, pageurl))
+print ("%s - Opening page %s" % (longId, pageurl))
 driver.get(pageurl)
 # time.sleep(0.5)
 
-print ("%s%s - Current title: %s" % (optId, browserName, driver.title))
-print ("%s%s - Asserting 'Google Adwords' in driver.title" % (optId, browserName))
+print ("%s - Current title: %s" % (longId, driver.title))
+print ("%s - Asserting 'Google Adwords' in driver.title" % (longId))
 assert "Google AdWords" in driver.title
 
-print ("%s%s - Close driver and clean up" % (optId, browserName))
+print ("%s - Close driver and clean up" % (longId))
 driver.close()
 # time.sleep(0.5)
 
-print ("%s%s - All done. SUCCESS!" % (optId, browserName))
+print ("%s - All done. SUCCESS!" % (longId))
 driver.quit()
