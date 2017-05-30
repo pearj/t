@@ -16,6 +16,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # http://selenium-python.readthedocs.io/api.html#desired-capabilities
 # Create a desired capabilities object as a starting point.
 browserName = os.environ.get('CAPS_BROWSER_NAME', 'chrome')
+browserVersion = os.environ.get('CAPS_BROWSER_VERSION', '')
 
 # Group tests by `build`
 buildId = "%s%s" % (os.environ.get('JOB_NAME', ''), os.environ.get('BUILD_NUMBER', ''))
@@ -26,13 +27,18 @@ if buildId == '':
 nameId = os.environ.get('TEST_ID', 'test-adwords')
 
 # Have a long Id for the log outpus
-longId = "%s - %s - %s" % (buildId, nameId, browserName)
+longId = "%s - %s - %s%s" % (buildId, nameId, browserName, browserVersion)
+
+width = os.environ.get('SCREEN_WIDTH','1024')
+height = os.environ.get('SCREEN_HEIGHT','768')
 
 # Build the capabilities
 caps = {'browserName': browserName}
 caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', 'ANY')
-caps['version'] = os.environ.get('CAPS_BROWSER_VERSION', '')
+caps['version'] = browserVersion
+# caps['tunnelIdentifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
 caps['tunnel-identifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
+caps['screenResolution'] = "%sx%s" % (width, height)
 caps['name'] = nameId
 caps['build'] = buildId
 caps['recordVideo'] = 'true'
@@ -51,7 +57,10 @@ driver = webdriver.Remote(command_executor=myselenium, desired_capabilities=caps
 pageurl = "http://www.google.com/adwords"
 print ("%s - Opening page %s" % (longId, pageurl))
 driver.get(pageurl)
-# time.sleep(0.5)
+
+# Set location top left and size to max allowed on the container
+driver.set_window_position(0, 0)
+driver.set_window_size(width, height)
 
 print ("%s - Current title: %s" % (longId, driver.title))
 print ("%s - Asserting 'Google Adwords' in driver.title" % (longId))
@@ -59,7 +68,6 @@ assert "Google AdWords" in driver.title
 
 print ("%s - Close driver and clean up" % (longId))
 driver.close()
-# time.sleep(0.5)
 
 print ("%s - All done. SUCCESS!" % (longId))
 driver.quit()
