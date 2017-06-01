@@ -39,6 +39,7 @@ caps['platform'] = os.environ.get('CAPS_OS_PLATFORM', 'ANY')
 caps['version'] = browserVersion
 # caps['tunnelIdentifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
 caps['tunnel-identifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
+# caps['screenResolution'] = "%sx%sx24" % (width, height)
 caps['screenResolution'] = "%sx%s" % (width, height)
 caps['name'] = nameId
 caps['build'] = buildId
@@ -70,5 +71,6 @@ assert "Google AdWords" in driver.title
 print ("%s %s - Close driver and clean up" % (datetime.datetime.utcnow(), longId))
 driver.close()
 
-print ("%s %s - All done. SUCCESS!" % (datetime.datetime.utcnow(), longId))
+print ("%s %s - All done. SUCCESS! - will driver.quit()" % (datetime.datetime.utcnow(), longId))
 driver.quit()
+print ("%s %s - All done. SUCCESS! - DONE driver.quit()" % (datetime.datetime.utcnow(), longId))
