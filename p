@@ -222,7 +222,7 @@ getDockerOpts(){
     local __screen_height=${SCREEN_HEIGHT:-"1080"}
     local __chrome_count=${CHROME_START_COUNT:-"1"}
     local __firefox_count=${FIREFOX_START_COUNT:-"1"}
-    local __max_containers=${MAX_CONTAINERS_COUNT:-"10"}
+    local __max_containers=${MAX_CONTAINERS_COUNT:-"60"}
 
     # Map video folder if videos are enabled
     if [ "${__video}" == "true" ]; then
