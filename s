@@ -43,7 +43,7 @@ caps['tunnel-identifier'] = os.environ.get('TUNNEL_ID', 'zalenium')
 caps['screenResolution'] = "%sx%s" % (width, height)
 caps['name'] = nameId
 caps['build'] = buildId
-caps['recordVideo'] = 'true'
+caps['recordVideo'] = os.environ.get('VIDEO','false')
 
 sel_host = os.environ.get('SEL_HOST', 'localhost')
 sel_port = os.environ.get('SEL_PORT', '4444')
