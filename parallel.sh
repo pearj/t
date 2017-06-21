@@ -82,7 +82,7 @@ for i in `seq 0 $LOOP_END_NUM`; do
             fi
 
             for j in `seq 1 5`; do
-                test_id_chrome=thread-${chrome_thread_num}_seq-$j
+                test_id_chrome=${STAGE}thread-${chrome_thread_num}_seq-$j
                 TEST_ID=$test_id_chrome python x chrome || \
                 TEST_ID=$test_id_chrome python x chrome || \
                     die "Test failed on chrome $test_id_chrome"
@@ -99,7 +99,7 @@ for i in `seq 0 $LOOP_END_NUM`; do
             fi
 
             for j in `seq 1 5`; do
-                test_id_firefox=thread-${firefox_thread_num}_seq-$j
+                test_id_firefox=${STAGE}thread-${firefox_thread_num}_seq-$j
                 TEST_ID=$test_id_firefox python x firefox || \
                 TEST_ID=$test_id_firefox python x firefox || \
                     die "Test failed on firefox $test_id_firefox"
