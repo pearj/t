@@ -56,7 +56,7 @@ if [ "${MOCK_SERVER_HOST}" == "" ]; then
   die "Failed to grab IP from adwords_mock"
 fi
 
-MOCK_URL="http://localhost:${MOCK_SERVER_PORT}/adwords"
+MOCK_URL="http://${MOCK_SERVER_HOST}:${MOCK_SERVER_PORT}/adwords"
 echo "Mock server should be found at ${MOCK_URL}"
 
 while ! curl -s "${MOCK_URL}"; do
