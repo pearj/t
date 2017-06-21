@@ -95,7 +95,7 @@ for i in `seq 0 $LOOP_END_NUM`; do
             if [ "${TEST_TYPE}" == "hybrid" ]; then
                 firefox_thread_num="$((i*2+2))"
             else
-                firefox_thread_num="$((i+2))"
+                firefox_thread_num="$((i+1))"
             fi
 
             for j in `seq 1 5`; do
