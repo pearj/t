@@ -26,11 +26,15 @@ die () {
 
 TEST_TYPE=$1
 TOT_THREADS=$2
+TESTS_PER_THREAD=$3
 
 [ "${TEST_TYPE}" == "" ] && die "1st param must be one of 'chrome', 'firefox', 'hybrid'"
 
 [ "${TOT_THREADS}" == "" ] && die "2nd param should be the amount of parallel tests to run!"
 [ $((TOT_THREADS%2)) -eq 0 ] || die "The amount of threads needs to be an even number!"
+
+# By default 5 tests per thread, for stress testing
+[ "${TESTS_PER_THREAD}" == "" ] && TESTS_PER_THREAD=5
 
 function get_mock_port() {
   echo $(docker inspect -f='{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' adwords_mock)
@@ -56,7 +60,12 @@ if [ "${MOCK_SERVER_HOST}" == "" ]; then
   die "Failed to grab IP from adwords_mock"
 fi
 
-MOCK_URL="http://${MOCK_SERVER_HOST}:${MOCK_SERVER_PORT}/adwords"
+if [ "$(uname)" == 'Darwin' ]; then
+  MOCK_URL="http://localhost:${MOCK_SERVER_PORT}/adwords"
+else
+  MOCK_URL="http://${MOCK_SERVER_HOST}:${MOCK_SERVER_PORT}/adwords"
+fi
+
 echo "Mock server should be found at ${MOCK_URL}"
 
 while ! curl -s "${MOCK_URL}"; do
@@ -81,7 +90,7 @@ for i in `seq 0 $LOOP_END_NUM`; do
                 chrome_thread_num="$((i+1))"
             fi
 
-            for j in `seq 1 5`; do
+            for j in `seq 1 $TESTS_PER_THREAD`; do
                 test_id_chrome=${STAGE}thread-${chrome_thread_num}_seq-$j
                 TEST_ID=$test_id_chrome python x chrome || \
                 TEST_ID=$test_id_chrome python x chrome || \
@@ -98,7 +107,7 @@ for i in `seq 0 $LOOP_END_NUM`; do
                 firefox_thread_num="$((i+1))"
             fi
 
-            for j in `seq 1 5`; do
+            for j in `seq 1 $TESTS_PER_THREAD`; do
                 test_id_firefox=${STAGE}thread-${firefox_thread_num}_seq-$j
                 TEST_ID=$test_id_firefox python x firefox || \
                 TEST_ID=$test_id_firefox python x firefox || \
