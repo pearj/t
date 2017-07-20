@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 # Usage
+#  bash parallel.sh {browser} {threads} {test-per-thread=5}
 #  bash parallel.sh chrome 2
 #  bash parallel.sh firefox 2
-#  bash parallel.sh hybrid 2
+#  time ( VIDEO=true bash parallel.sh hybrid 4 )
 #  VIDEO=true bash parallel.sh hybrid 2
 
 set -e

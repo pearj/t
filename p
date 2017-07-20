@@ -88,7 +88,11 @@ WaitZaleniumStarted()
     if [ "$(uname -s)" != 'Darwin' ]; then
         # This doesn't work properly on OSX
         # Below export is useless if this is run in a separate shell
-        local __sel_host=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+        if [ "${USE_NET_HOST}" == "true" ]; then
+            local __sel_host="localhost"
+        else
+            local __sel_host=$(docker inspect -f='{{.NetworkSettings.IPAddress}}' zalenium)
+        fi
         local __selenium_grid_console="http://${__sel_host}:4444/grid/console"
 
         # Also wait for the Proxy to be registered into the hub
