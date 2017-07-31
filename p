@@ -310,6 +310,8 @@ getDockerOpts(){
 
     echo ${__z_docker_opts} \
       -e BUILD_URL="${BUILD_URL}" \
+      -e CDP_TARGET_REPOSITORY="${CDP_TARGET_REPOSITORY}" \
+      -e KUBERNETES_ENABLED="${KUBERNETES_ENABLED}" \
       -e SAUCE_USERNAME="${SAUCE_USERNAME}" \
       -e SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY}" \
       -e SAUCE_TUNNEL_ID="${SAUCE_TUNNEL_ID}" \
