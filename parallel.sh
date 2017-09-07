@@ -38,14 +38,14 @@ TESTS_PER_THREAD=$3
 [ "${TESTS_PER_THREAD}" == "" ] && TESTS_PER_THREAD=5
 
 function get_mock_port() {
-  echo $(docker inspect -f='{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' adwords_mock)
+  echo $(docker inspect -f='{{(index (index .NetworkSettings.Ports "8082/tcp") 0).HostPort}}' adwords_mock)
 }
 
 function mock_is_running() {
   docker inspect -f {{.State.Running}} adwords_mock | grep true
 }
 
-export MOCK_SERVER_PORT=8080
+export MOCK_SERVER_PORT=8082
 
 if mock_is_running >/dev/null 2>&1; then
   docker stop adwords_mock || true
