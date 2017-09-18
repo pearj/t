@@ -71,6 +71,16 @@ assert "Google AdWords" in driver.title
 print ("%s %s - Close driver and clean up" % (datetime.datetime.utcnow(), longId))
 driver.close()
 
-print ("%s %s - All done. SUCCESS! - will driver.quit()" % (datetime.datetime.utcnow(), longId))
-driver.quit()
-print ("%s %s - All done. SUCCESS! - DONE driver.quit()" % (datetime.datetime.utcnow(), longId))
+print ("%s %s - (98%%) Test done - will driver.close()" % (datetime.datetime.utcnow(), longId))
+try:
+    driver.close()
+except:
+    pass
+
+print ("%s %s - (99%%) Test done - will driver.quit()" % (datetime.datetime.utcnow(), longId))
+try:
+    driver.quit()
+except:
+    pass
+
+print ("%s %s - (100%%) All done. SUCCESS! - DONE driver.quit()" % (datetime.datetime.utcnow(), longId))
