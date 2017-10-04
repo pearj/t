@@ -68,19 +68,6 @@ print ("%s %s - Current title: %s" % (datetime.datetime.utcnow(), longId, driver
 print ("%s %s - Asserting 'Google Adwords' in driver.title" % (datetime.datetime.utcnow(), longId))
 assert "Google AdWords" in driver.title
 
-print ("%s %s - Close driver and clean up" % (datetime.datetime.utcnow(), longId))
-driver.close()
-
-print ("%s %s - (98%%) Test done - will driver.close()" % (datetime.datetime.utcnow(), longId))
-try:
-    driver.close()
-except:
-    pass
-
 print ("%s %s - (99%%) Test done - will driver.quit()" % (datetime.datetime.utcnow(), longId))
-try:
-    driver.quit()
-except:
-    pass
-
+driver.quit()
 print ("%s %s - (100%%) All done. SUCCESS! - DONE driver.quit()" % (datetime.datetime.utcnow(), longId))
