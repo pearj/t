@@ -227,6 +227,12 @@ getDockerOpts(){
     local __chrome_count=${CHROME_START_COUNT:-"1"}
     local __firefox_count=${FIREFOX_START_COUNT:-"1"}
     local __max_containers=${MAX_CONTAINERS_COUNT:-"60"}
+    local __time_zone=${TIME_ZONE:-"Europe/Berlin"}
+    local __debug_enabled=${DEBUG_ENABLED:-"false"}
+    local __selenium_image_name=${SELENIUM_IMAGE_NAME:-"elgalu/selenium"}
+    local __max_test_sessions=${MAX_TEST_SESSIONS:-"1"}
+    local __keep_only_failed_tests=${KEEP_ONLY_FAILED_TESTS:-"false"}
+    local __send_anonymous_usage_info=${SEND_ANONYMOUS_USAGE_INFO:-"true"}
 
     # Map video folder if videos are enabled
     if [ "${__video}" == "true" ]; then
@@ -337,7 +343,13 @@ getDockerOpts(){
             --sauceLabsEnabled ${SAUCE_LABS_ENABLED} \
             --browserStackEnabled ${BROWSER_STACK_ENABLED} \
             --testingBotEnabled ${TESTINGBOT_ENABLED} \
-            --startTunnel "${__start_tunnel}"
+            --startTunnel "${__start_tunnel}" \
+            --timeZone "${__time_zone}" \
+            --debugEnabled "${__debug_enabled}" \
+            --seleniumImageName "${__selenium_image_name}" \
+            --maxTestSessions "${MAX_TEST_SESSIONS}" \
+            --keepOnlyFailedTests "${KEEP_ONLY_FAILED_TESTS}" \
+            --sendAnonymousUsageInfo "${SEND_ANONYMOUS_USAGE_INFO}"
 }
 
 ShutDownZalenium(){
@@ -575,6 +587,11 @@ function usage() {
     echo -e "\t --screenWidth\t\t\tSets the screen width (default 1900)"
     echo -e "\t --screenHeight\t\t\tSets the screen height (default 1800)"
     echo -e "\t --timeZone\t\t\tSets the time zone in the containers (default \"Europe/Berlin\")"
+    echo -e "\t --sendAnonymousUsageInfo\t\t\tCollects anonymous usage of the tool. Defaults to 'true'"
+    echo -e "\t --debugEnabled\t\t\tenables LogLevel.FINE. Defaults to 'false'"
+    echo -e "\t --seleniumImageName\t\t\tenables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
+    echo -e "\t --maxTestSessions\t\t\max amount of tests executed per container, defaults to '1'."
+    echo -e "\t --keepOnlyFailedTests\t\t\Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
     echo ""
 
     echo ""
@@ -686,8 +703,36 @@ while [ "$1" != "" ]; do
             VIDEO="${2}"
             shift
             ;;
-         --videos-dir)
+        --videos-dir)
             VIDEOS_DIR="${2}"
+            shift
+            ;;
+        --timeZone)
+            TIME_ZONE="${2}"
+            shift
+            ;;
+        --debugEnabled)
+            DEBUG_ENABLED="${2}"
+            shift
+            ;;
+        --debugEnabled)
+            DEBUG_ENABLED="${2}"
+            shift
+            ;;
+        --seleniumImageName)
+            SELENIUM_IMAGE_NAME="${2}"
+            shift
+            ;;
+        --maxTestSessions)
+            MAX_TEST_SESSIONS="${2}"
+            shift
+            ;;
+        --keepOnlyFailedTests)
+            KEEP_ONLY_FAILED_TESTS="${2}"
+            shift
+            ;;
+        --sendAnonymousUsageInfo)
+            SEND_ANONYMOUS_USAGE_INFO="${2}"
             shift
             ;;
         3)
