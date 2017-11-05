@@ -347,9 +347,9 @@ getDockerOpts(){
             --timeZone "${__time_zone}" \
             --debugEnabled "${__debug_enabled}" \
             --seleniumImageName "${__selenium_image_name}" \
-            --maxTestSessions "${MAX_TEST_SESSIONS}" \
-            --keepOnlyFailedTests "${KEEP_ONLY_FAILED_TESTS}" \
-            --sendAnonymousUsageInfo "${SEND_ANONYMOUS_USAGE_INFO}"
+            --maxTestSessions "${__max_test_sessions}" \
+            --keepOnlyFailedTests "${__keep_only_failed_tests}" \
+            --sendAnonymousUsageInfo "${__send_anonymous_usage_info}"
 }
 
 ShutDownZalenium(){
