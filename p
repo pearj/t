@@ -224,6 +224,7 @@ getDockerOpts(){
     local __video=${VIDEO:-"true"}
     local __screen_width=${SCREEN_WIDTH:-"1920"}
     local __screen_height=${SCREEN_HEIGHT:-"1080"}
+    local __desired_containers_count=${DESIRED_CONTAINERS_START_COUNT:-"2"}
     local __chrome_count=${CHROME_START_COUNT:-"1"}
     local __firefox_count=${FIREFOX_START_COUNT:-"1"}
     local __max_containers=${MAX_CONTAINERS_COUNT:-"60"}
@@ -233,6 +234,10 @@ getDockerOpts(){
     local __max_test_sessions=${MAX_TEST_SESSIONS:-"1"}
     local __keep_only_failed_tests=${KEEP_ONLY_FAILED_TESTS:-"false"}
     local __send_anonymous_usage_info=${SEND_ANONYMOUS_USAGE_INFO:-"true"}
+
+    if [ "${deprecated_parameters}" == "true" ]; then
+        __desired_containers_count=$((__chrome_count + __firefox_count))
+    fi
 
     # Map video folder if videos are enabled
     if [ "${__video}" == "true" ]; then
@@ -335,8 +340,7 @@ getDockerOpts(){
       --label zalenium_main \
       dosel/zalenium:${zalenium_tag} \
       start ${__z_startup_opts} \
-            --chromeContainers "${__chrome_count}" \
-            --firefoxContainers "${__firefox_count}" \
+            --desiredContainers "${__desired_containers_count}" \
             --maxDockerSeleniumContainers "${__max_containers}" \
             --screenWidth "${__screen_width}" --screenHeight "${__screen_height}" \
             --videoRecordingEnabled "${__video}" \
@@ -578,8 +582,7 @@ function usage() {
     echo ""
     echo -e "\t Tests:"
     echo ""
-    echo -e "\t --firefoxContainers\t\tNumber of Firefox containers created on startup (default 1)"
-    echo -e "\t --chromeContainers\t\tNumber of Chrome containers created on startup (default 1)"
+    echo -e "\t --desiredContainers\t\tNumber of nodes/containers created on startup. Default is 2."
     echo -e "\t --maxDockerSeleniumContainers\tMax number of docker-selenium containers running at the same time (default 10)"
     echo -e "\t --sauceLabsEnabled\t\tDetermines if the Sauce Labs node is started (default true)"
     echo -e "\t --videoRecordingEnabled\tRecord video of tests (default true)"
@@ -597,8 +600,8 @@ function usage() {
     echo ""
     echo -e "\t Examples:"
     echo ""
-    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
-    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t - Starting Zalenium with 2 nodes/containers and without Sauce Labs"
+    echo -e "\t start --desiredContainers 2 --sauceLabsEnabled false"
     echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
     echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
@@ -611,6 +614,7 @@ we_have_sudo="true"
 start_it="false"
 stop_it="false"
 zalenium_tag="latest"
+deprecated_parameters="false"
 
 # Overwrite defaults in certain peculiar environments
 if [ "${TOOLCHAIN_LOOKUP_REGISTRY}" != "" ]; then
@@ -679,11 +683,20 @@ while [ "$1" != "" ]; do
         stop)
             stop_it="true"
             ;;
+        --desiredContainers)
+            deprecated_parameters="false"
+            DESIRED_CONTAINERS_START_COUNT="${2}"
+            shift
+            ;;
         --chromeContainers)
+            echo "Using DEPRECATED --chromeContainers parameter, will fallback to --desiredContainers with the sum of Chrome and Firefox."
+            deprecated_parameters="true"
             CHROME_START_COUNT="${2}"
             shift
             ;;
         --firefoxContainers)
+            echo "Using DEPRECATED --firefoxContainers parameter, will fallback to --desiredContainers with the sum of Chrome and Firefox."
+            deprecated_parameters="true"
             FIREFOX_START_COUNT="${2}"
             shift
             ;;
