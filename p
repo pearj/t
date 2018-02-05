@@ -140,7 +140,7 @@ getDockerOpts(){
     if [ "${USE_NET_HOST}" == "true" ]; then
         local __z_docker_opts="${__z_default_docker_opts} --net=host"
     else
-        local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 -p 5555:5555 ${ADDITIONAL_DOCKER_OPTS}"
+        local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 ${ADDITIONAL_DOCKER_OPTS}"
     fi
 
     local __z_startup_opts=""
