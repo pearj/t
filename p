@@ -120,7 +120,8 @@ getDockerOpts(){
     local __z_default_docker_opts="--name zalenium"
 
     if [ "${USE_NET_HOST}" == "true" ]; then
-        local __z_docker_opts="${__z_default_docker_opts} --net=host"
+        echo "ERROR: --net=host is no longer supported"
+        exit 1
     else
         local __z_docker_opts="${__z_default_docker_opts} -p 4444:4444 ${ADDITIONAL_DOCKER_OPTS}"
     fi
